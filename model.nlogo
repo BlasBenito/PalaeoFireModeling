@@ -432,7 +432,7 @@ end
 to abiotic-fire
 
    ;COMPUTING NUMBER OF IGNITIONS
-    ifelse Fire?
+   ifelse Fire?
 
    ;FIRE INTERRUPTOR ACTIVE
    [
@@ -2757,18 +2757,22 @@ Mortality?
 @#$#@#$#@
 ## WHAT IS IT?
 
-This is an sptial-explicit simulation of the effect of fire regimes on the population dynamics of five forest species (Pinus sylvestris, Pinus uncinata, Betula pendula, Corylus avellana, and Quercus petraea) during the Lateglacial-Holocene transition (15-7 cal Kyr BP) at El Portalet, an alpine bog located in the central Pyrenees region (1802m asl, Spain), that has served for palaeoenvironmental studies (González-Smapériz et al. 2006; Gil-Romera et al., 2014).
+This is a spatio-temporal simulation of the effect of fire regimes on the population dynamics of five forest species (Pinus sylvestris, Pinus uncinata, Betula pendula, Corylus avellana, and Quercus petraea) during the Lateglacial-Holocene transition (15-7 cal Kyr BP) at El Portalet, an alpine bog located in the central Pyrenees region (1802m asl, Spain), that has served for palaeoenvironmental studies (González-Smapériz et al. 2006; Gil-Romera et al., 2014).
 
 
 ## HOW IT WORKS
 
-The fundamental factors considered in the model are:
+**The fundamentals**
+
+The main factors considered in the model are:
 
 + Environmental limits of the target species inferred from their present day distributions (presence data was taken from GBIF).
 
 + Estimated minimum temperature computed from palaeoclimatic data at annual resolution provided by the TraCe simulation.
 
-+ Effect of topography (elevation, slope, aspect, northness) derived from a digital elevation model (200 meters resolution).
++ The effect of topography (elevation, slope, aspect, northness) derived from a digital elevation model (200 meters resolution) on species distributions and fire spread.
+
++ Environmental stochasticity is defined as a random number in the range [0, 1] assigned to every patch to represent local stochastic factors not related with known ecological drivers. Environmental stochasticity doesn't have an spatial pattern (it would be too costly computationwise to do so), but its temporal pattern follows a random walk that changes value every ~10 years. 
 
 + Population dynamics driven by species traits such as dispersal distance, longevity, fecundity, mortality, growth rate, post-fire response to fire, and heliophity (competition for light). The data is based on the literature and/or expert opinion from forest and fire ecologists.
 
@@ -2785,22 +2789,57 @@ The fundamental factors considered in the model are:
 + The model doesn't simulate the entire population of the target species. Instead, on each 200 x 200 meters patch it simulates the dynamics of an small forest plot (around 10 x 10 meters) where a maximum of one individual per species can exist.
 
 
+**Environmental change**
+
+Each year the following steps are followed to represent environmental change:
+
++  Temperature change: an average temperature value for the study area in the given year is read from the TraCe time series, and a correction map is used to assign temperature values per patch depending on its elevation.
+
++  Environmental stochasticity: if a random number in the range [0, 100] is lower than a random number in the range [0, 10], the environmental stochasticity number of each patch is drawn from normal distribution with the previous value as average, and a standard deviation of 0.01.
+
++  Fire generation: If a random number in the range [0, 1] turns to be lower than the *Fire-probability-per-year* parameter defined by the user, the number of ignitions for the given year is computed by multiplying Fire-ignitions-amplification-factor (parameter defined by the user) by the value drawn from El Portalet charcoal time series for the given year. Otherwise the number of ignitions is set to 0.
 
 
-This model follow three steps to determine whether a patch is occupied by the species or not:
+**The life of an individual**
 
-1 During the setup, a random number [0, 1] is assigned to each patch, and stored in the variable landscape-random
+Any individual is created as a seed, either during model set-up, or during the simulation, as the offspring of another individual. From there, it will follow these steps:
 
-2 When a new agent is created, it computes habitat suitability [0, 1] based on the GLM equation given by the parameters vegetation-glm-coef-intercept, vegetation-glm-coef-temperature-minimum-average, vegetation-glm-coef-slope, vegetation-glm-coef-wetness-index, and the values of the predictors in the patch.
++  Its age increases by one year, and its life-stage is changed to "seedling".
+
++  Computes habitat suitability using the logistic equation *1 / ( 1 + exp( -(intercept + coefficient * temperature)))*, where the intercept and the coefficient are species-specific, and have been computed beforehand by using current presence data and temperature maps. 
+
+    +  If habitat suitability is higher than the environmental stochasticity number of the patch, the habitat is considered suitable.
+
+    +  If it is lower, the habitat is considered unsuitable, and the number of years under unsuitable habitat is increased by 1.
+
+        + If the number of years unders unsuitable habitat becomes higher than *seedling-tolerance*, the seedling dies, and another seed from the seed bank takes its place. Otherwise it stays alive.
+
++  Mortality: If a random number in the range [0, 1] is lower than the seedling mortality of the species the plant dies, and it is replaced by a seed from the seed bank. Otherwise it stays alive.
+
++  Competition and growth:
+
+   +  If the patch total biomass of the individuals in the patch equals *Max-biomass-per-patch*, the individual loses an amount of biomass between 0 and the 20% of its current biomass. This number is selected at random.
+
+   + If *Max-biomass-per-patch* has not been reached yet:
+
+       + An *interaction term* is computed as *(1 - (biomass of other individuals in the patch / Max-biomass-per-patch)) * (1 - heliophilia))*. 
+
+       + The interaction term is introduced in the growth equation *max-biomass / (1 + max-biomass * exp(- growth-rate * interaction-term * habitat-suitability * age))* to compute the current biomass of the individual.
+
++  If a fire reaches the patch and there are adult individuals of other species on it, the plant dies, and it is replaced by a seed.
+
+These steps continue while the individual is still a seedling, but once it reaches its maturity age it is marked as an adult, and some steps are slightly different:
+
++  If a random number in the range [0, 1] is lower than the adults mortality of the species, or the maximum age of the species is reached, the individual is marked for decay. The current biomass of decaying individuals is computed as *previous-biomass - years-of-decay*. To add the effect of climatic variability to this decreasing function, its result is multiplied by *1 - habitat-suitability x random[0, 10]*. If the biomass is higher than zero, pollen productivity is computed as *current-biomass x species-pollen-productivity*. The individual dies and is replaced by a seed when the biomass is below 1.
+
++  Dispersal: If the individual is in suitable habitat, a seed from it is placed in one of the cells around it (the radius of the buffer given by the dispersal distance of the species) with no individuals of the same species.
+
++  If the individual starts a fire, or if fire spreads in from neighboring patches, it is marked as "burned", spreads fire to its neighbors, dies, and is replaced by a seed. If the individual belongs to an species with post-fire resprouting, the growth-rate of the seed is multiplied by 2 to boost growth after fire.
 
 
-Once habitat suitability is computed, two conditions are required for the patch to becom occupyed by the species (vegetation-is-habitat-suitable? = TRUE):
++  Simulating pollen and charcoal deposition: the pollen production of every living adult individual of each species is summed across all patches within the RSAP to compose the simulated pollen curves. The same is done with the biomass of the burned individuals to compose the virtual charcoal curve.
 
-3a The environmental conditions of the patch have to lie between the extreme environmental conditions of the species (vegetation-niche-... parameters).
 
-3b The random number used to represent landscape stochasticity (landscape-random) should be lower than the habitat suitability value produced by the GLM equation ( vegetation-glm-presence-probability).
-
-This method is non-deterministic, since the distribution of the species is going to depend on the distribution across the landscape of landscape-random values. To run the model a few times is highly recommended.
 
 
 The model presents several graphical outputs:
