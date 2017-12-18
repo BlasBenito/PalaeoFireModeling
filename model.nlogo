@@ -2757,22 +2757,35 @@ Mortality?
 @#$#@#$#@
 ## WHAT IS IT?
 
-This is an sptial-explicit simulation of the main species in the forest dynamics in El Portalet, an alpine bog that has served for palaeoenvironmental studies (González-Smapériz et al. 2006; Gil-Romera et al., 2014). El Portalet is in the central Pyrenees region (1802m asl, Spain) and this model simulates populations dynamics during the Lateglacial-Holocene transition (15-7 cal Kyr BP). The model is particularly focused on the tree population sensitivity to temperature changes and post-fire tree response of 5 taxa: Pinus uncinata, P. sylvestris, Betula pendula, Corylus avellana and Quercus petraea.
-
-The simulation is based on: 1) The environmental limits exhibit by these taxa; these are inferred from their present day distributions (presence data were taken from GBIF and physical variables from BLAS) 2) Population dynamics traits as longevity, recruiting, mortality, growth rate, maximum biomass, response to fire or heliophity. Values for these parameters were taken from empirical studies and sources CAN BE SEEN HERE) 3) Fire occurrence deduced from the charcoal accumulation rate record from El Portalet palaeoenvironmental sequence (Gil-Romera et al., 2014) where fire events are identified. For the periods where no fire is recorded, a background fire activity has been set.
-
-The model presents several graphical outputs:
-1. Modeled pollen variation for the 5 taxa studied during the time span considered (where 15kyr BP equals time 0). These simulated pollen spectra correspond to the pollen amounts recorded by a sensor at the area's center, matching El Portalet's location. The simulated pollen spectra can be cross-validated by the fossil pollen sequence previously obtained (González-Smapériz et al. 2006; Gil-Romera et al., 2014)
-2. Population dynamics presenting the number of adults, seedling and seeds produced along the considered period.
-3. Plots of the input values:
-- Minimum Temperature of the coldest month (MT) that has been identified as the most importan variable to explain these taxa presence in the area. This MT series corresponds to to the TraCe model (http://www.cgd.ucar.edu/ccr/TraCE/ a transient model for the global climate evolution of the last 21K years with an annual resolution).
-- A time series of environmental stochasticity (BLAS).
-- The recorded charcoal as a proxy of fire and the simulated charcoal recorded in the sensor.
-
-The resutls for the cros-validation of simulated vs real pollen spectras, as well as a discussion in depth on the population dynamics CAN BE FOUND IN...
+This is an sptial-explicit simulation of the effect of fire regimes on the population dynamics of five forest species (Pinus sylvestris, Pinus uncinata, Betula pendula, Corylus avellana, and Quercus petraea) during the Lateglacial-Holocene transition (15-7 cal Kyr BP) at El Portalet, an alpine bog located in the central Pyrenees region (1802m asl, Spain), that has served for palaeoenvironmental studies (González-Smapériz et al. 2006; Gil-Romera et al., 2014).
 
 
 ## HOW IT WORKS
+
+The fundamental factors considered in the model are:
+
++ Environmental limits of the target species inferred from their present day distributions (presence data was taken from GBIF).
+
++ Estimated minimum temperature computed from palaeoclimatic data at annual resolution provided by the TraCe simulation.
+
++ Effect of topography (elevation, slope, aspect, northness) derived from a digital elevation model (200 meters resolution).
+
++ Population dynamics driven by species traits such as dispersal distance, longevity, fecundity, mortality, growth rate, post-fire response to fire, and heliophity (competition for light). The data is based on the literature and/or expert opinion from forest and fire ecologists.
+
++ Species distributions over time depend on temperature, topography, dispersal distance, and population dynamics.
+
++ Fire occurrence is simulated with a rate of occurence based on the charcoal accumulation rate record from El Portalet palaeoenvironmental sequence (Gil-Romera et al., 2014).
+
++ Pollen and charcoal sedimentation is simulated by defining an RSAP catchment area around the El Portalet core location (10 km radius).
+
++ The model is evaluated by comparing the real pollen data (not used in the model) with the simulated pollen curves.
+
++ The time resolution of the model is 1 year.
+
++ The model doesn't simulate the entire population of the target species. Instead, on each 200 x 200 meters patch it simulates the dynamics of an small forest plot (around 10 x 10 meters) where a maximum of one individual per species can exist.
+
+
+
 
 This model follow three steps to determine whether a patch is occupied by the species or not:
 
@@ -2789,6 +2802,17 @@ Once habitat suitability is computed, two conditions are required for the patch 
 
 This method is non-deterministic, since the distribution of the species is going to depend on the distribution across the landscape of landscape-random values. To run the model a few times is highly recommended.
 
+
+The model presents several graphical outputs:
+1. Modeled pollen variation for the 5 taxa studied during the time span considered (where 15kyr BP equals time 0). These simulated pollen spectra correspond to the pollen amounts recorded by a sensor at the area's center, matching El Portalet's location. The simulated pollen spectra can be cross-validated by the fossil pollen sequence previously obtained (González-Smapériz et al. 2006; Gil-Romera et al., 2014)
+2. Population dynamics presenting the number of adults, seedling and seeds produced along the considered period.
+3. Plots of the input values:
+- Minimum Temperature of the coldest month (MT) that has been identified as the most importan variable to explain these taxa presence in the area. This MT series corresponds to to the TraCe model (http://www.cgd.ucar.edu/ccr/TraCE/ a transient model for the global climate evolution of the last 21K years with an annual resolution).
+- A time series of environmental stochasticity (BLAS).
+- The recorded charcoal as a proxy of fire and the simulated charcoal recorded in the sensor.
+
+The resutls for the cros-validation of simulated vs real pollen spectras, as well as a discussion in depth on the population dynamics CAN BE FOUND IN...
+
 ## HOW TO USE IT
 
 
@@ -2796,21 +2820,7 @@ This method is non-deterministic, since the distribution of the species is going
 
 Parameters
 
-Xx-max-age: maximum age in years.
 
-Xx-maturity-age: reproductive age.
-
-Xx-pollen-productivity: multiplyier of biomass to obtain current pollen production
-
-Xx-yearly-growth: biomass gain per year (assuming linear growth).
-
-Xx-max-growth: maximum biomass.
-
-Xx-heliophyte: TRUE if the species requires sunlight.
-
-Xx-[seedling, adult]-tolerance: years of survival under unsuitable habitat.
-
-Xx-[seedling, adult]-mortaility: frequency of deaths due to herbivory or pests.
 
 
 ## THINGS TO NOTICE
