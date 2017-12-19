@@ -2762,53 +2762,36 @@ This is a spatio-temporal simulation of the effect of fire regimes on the popula
 
 ## HOW IT WORKS
 
-**The fundamentals**
+### Abiotic component
 
-The main factors considered in the model are:
+The abiotic layer of the model is represented by three main environmental factors:
 
-+ Environmental limits of the target species inferred from their present day distributions (presence data was taken from GBIF).
++ **Topography** derived from a digital elevation model at 200 x 200 meters resolution. Slope (along temperature) is used to impose restrictions to species distributions. Northness (in the range [0, 1]) is used to restrict fire spread. Aspect is used to draw a shaded relief map (at the user's request). Elevation is used to compute a lapse rate map (see below).
 
-+ Estimated minimum temperature computed from palaeoclimatic data at annual resolution provided by the TraCe simulation.
++ **Temperature** (average of montly minimum temperatures) time series for the study area computed from palaeoclimatic data at annual resolution provided by the TraCe simulation. The single temperature value of every year is converted into a temperature map (200 x 200 m resolution) using a lapse rate map based on the elevation map.
 
-+ The effect of topography (elevation, slope, aspect, northness) derived from a digital elevation model (200 meters resolution) on species distributions and fire spread.
++ **Fire**: The charcoal accumulation rate record from El Portalet palaeoenvironmental sequence (Gil-Romera et al., 2014) is used as input to simulate forest fires. A value of this time series is read each year, and a random number in the range [0, 1] is generated. If the random number is lower than the *Fire-probability-per-year* parameter defined by the user, the value from the charcoal time series is multiplied by the parameter Fire-ignitions-amplification-factor (defined by the user) to compute the number of ignitions for the given year. As many adult treeF as ignitions are selected to start spreading fire. Fire spreads to a neighbor patch if there is an adult tree in there, and a random number in the range [0, 1] is higher than the northness value of the patch.
 
-+ Environmental stochasticity is defined as a random number in the range [0, 1] assigned to every patch to represent local stochastic factors not related with known ecological drivers. Environmental stochasticity doesn't have an spatial pattern (it would be too costly computationwise to do so), but its temporal pattern follows a random walk that changes value every ~10 years. 
+### Biotic component
 
-+ Population dynamics driven by species traits such as dispersal distance, longevity, fecundity, mortality, growth rate, post-fire response to fire, and heliophity (competition for light). The data is based on the literature and/or expert opinion from forest and fire ecologists.
+The biotic layer of the model is composed by five tree species. We have introduced the following elements to represent their ecological dynamics:
 
-+ Species distributions over time depend on temperature, topography, dispersal distance, and population dynamics.
++ **Topoclimatic niche**, inferred from their present day distributions and high resolution temperature maps (presence data taken from GBIF, temperature maps taken from Worldclim and the Digital Climatic Atlas of the Iberian Peninsula). The ecological niche is represented by a logistic equation (see below). The results of this equation plus the dispersal dynamics of each species defines changes in distribution over time.
 
-+ Fire occurrence is simulated with a rate of occurence based on the charcoal accumulation rate record from El Portalet palaeoenvironmental sequence (Gil-Romera et al., 2014).
-
-+ Pollen and charcoal sedimentation is simulated by defining an RSAP catchment area around the El Portalet core location (10 km radius).
-
-+ The model is evaluated by comparing the real pollen data (not used in the model) with the simulated pollen curves.
-
-+ The time resolution of the model is 1 year.
-
-+ The model doesn't simulate the entire population of the target species. Instead, on each 200 x 200 meters patch it simulates the dynamics of an small forest plot (around 10 x 10 meters) where a maximum of one individual per species can exist.
++ **Population dynamics**, driven by species traits such as dispersal distance, longevity, fecundity, mortality, growth rate, post-fire response to fire, and heliophity (competition for light). The data is based on the literature and/or expert opinion from forest and fire ecologists, and it is used to simulate growth (using logistic equations), competition for light and space, decay due to senescence, and mortality due to climate, fire, or plagues.
 
 
-**Environmental change**
+### Model dynamics
 
-Each year the following steps are followed to represent environmental change:
-
-+  Temperature change: an average temperature value for the study area in the given year is read from the TraCe time series, and a correction map is used to assign temperature values per patch depending on its elevation.
-
-+  Environmental stochasticity: if a random number in the range [0, 100] is lower than a random number in the range [0, 10], the environmental stochasticity number of each patch is drawn from normal distribution with the previous value as average, and a standard deviation of 0.01.
-
-+  Fire generation: If a random number in the range [0, 1] turns to be lower than the *Fire-probability-per-year* parameter defined by the user, the number of ignitions for the given year is computed by multiplying Fire-ignitions-amplification-factor (parameter defined by the user) by the value drawn from El Portalet charcoal time series for the given year. Otherwise the number of ignitions is set to 0.
-
-
-**The life of an individual**
-
-Any individual is created as a seed, either during model set-up, or during the simulation, as the offspring of another individual. From there, it will follow these steps:
+We will illustrate the model dynamics by following an individual across its life. During the model setup seeds of every species are created on every patch. From there, every seed will go through the following steps every simulated year:
 
 +  Its age increases by one year, and its life-stage is changed to "seedling".
 
-+  Computes habitat suitability using the logistic equation *1 / ( 1 + exp( -(intercept + coefficient * temperature)))*, where the intercept and the coefficient are species-specific, and have been computed beforehand by using current presence data and temperature maps. 
++  The minimum average temperature of its patch is updated.
 
-    +  If habitat suitability is higher than the environmental stochasticity number of the patch, the habitat is considered suitable.
++  The individual computes its habitat suitability using the logistic equation *1 / ( 1 + exp( -(intercept + coefficient * patch-temperature)))*, where the *intercept* and the *coefficient* are user defined. These parameters are hardcoded to save space in the GUI, and have been computed beforehand by using current presence data and temperature maps. 
+
+    +  If habitat suitability is higher than a random number in the range [0, 1], the habitat is considered suitable (NOTE: this random number is defined for the patch, and it changes every ~10 years following a random walk drawn from a normal distribution with the average set to the previous value, and a standard deviation of 0.001).
 
     +  If it is lower, the habitat is considered unsuitable, and the number of years under unsuitable habitat is increased by 1.
 
@@ -2824,21 +2807,32 @@ Any individual is created as a seed, either during model set-up, or during the s
 
        + An *interaction term* is computed as *(1 - (biomass of other individuals in the patch / Max-biomass-per-patch)) * (1 - heliophilia))*. 
 
-       + The interaction term is introduced in the growth equation *max-biomass / (1 + max-biomass * exp(- growth-rate * interaction-term * habitat-suitability * age))* to compute the current biomass of the individual.
+       + The interaction term is introduced in the growth equation *max-biomass / (1 + max-biomass * exp(- growth-rate * interaction-term * habitat-suitability * age))* to compute the current biomass of the individual. The lower the interaction term and habitat suitability are, the lower the growth becomes.
 
-+  If a fire reaches the patch and there are adult individuals of other species on it, the plant dies, and it is replaced by a seed.
++  If a fire reaches the patch and there are adult individuals of other species on it, the plant dies, and it is replaced by a seed (this seed inherites the traits of the parent).
 
-These steps continue while the individual is still a seedling, but once it reaches its maturity age it is marked as an adult, and some steps are slightly different:
+These steps continue while the individual is still a seedling, but once it reaches its maturity age it is marked as an adult, and after that some steps are slightly different:
 
 +  If a random number in the range [0, 1] is lower than the adults mortality of the species, or the maximum age of the species is reached, the individual is marked for decay. The current biomass of decaying individuals is computed as *previous-biomass - years-of-decay*. To add the effect of climatic variability to this decreasing function, its result is multiplied by *1 - habitat-suitability x random[0, 10]*. If the biomass is higher than zero, pollen productivity is computed as *current-biomass x species-pollen-productivity*. The individual dies and is replaced by a seed when the biomass is below 1.
 
-+  Dispersal: If the individual is in suitable habitat, a seed from it is placed in one of the cells around it (the radius of the buffer given by the dispersal distance of the species) with no individuals of the same species.
++  Dispersal: If the individual is in suitable habitat, a seed from it is placed in one of the neighboring patches within a radius given by the dispersal distance of the species (which is measured in "number of patches" and hardcoded) with no individuals of the same species.
 
 +  If the individual starts a fire, or if fire spreads in from neighboring patches, it is marked as "burned", spreads fire to its neighbors, dies, and is replaced by a seed. If the individual belongs to an species with post-fire resprouting, the growth-rate of the seed is multiplied by 2 to boost growth after fire.
 
 
 +  Simulating pollen and charcoal deposition: the pollen production of every living adult individual of each species is summed across all patches within the RSAP to compose the simulated pollen curves. The same is done with the biomass of the burned individuals to compose the virtual charcoal curve.
 
+
+
+
+
++ Pollen and charcoal sedimentation is simulated by defining an RSAP catchment area around the El Portalet core location (10 km radius).
+
++ The model is evaluated by comparing the real pollen data (not used in the model) with the simulated pollen curves.
+
++ The time resolution of the model is 1 year.
+
++ The model doesn't simulate the entire population of the target species. Instead, on each 200 x 200 meters patch it simulates the dynamics of an small forest plot (around 10 x 10 meters) where a maximum of one individual per species can exist.
 
 
 
