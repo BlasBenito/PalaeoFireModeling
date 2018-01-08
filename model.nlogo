@@ -2596,7 +2596,7 @@ CHOOSER
 Randomness-settings
 Randomness-settings
 "Fixed seed, deterministic results" "Free seed, non-deterministic results"
-0
+1
 
 PLOT
 22
@@ -2754,6 +2754,16 @@ Mortality?
 1
 -1000
 
+TEXTBOX
+520
+1466
+980
+1515
+This section is for testing purposes only. It allows the user to monitor the behavior of the model in a single patch defined by its cordinates monitored-x and monitored-y
+12
+0.0
+1
+
 @#$#@#$#@
 ## WHAT IS IT?
 
@@ -2768,7 +2778,7 @@ The abiotic layer of the model is represented by three main environmental factor
 
 + **Topography** derived from a digital elevation model at 200 x 200 meters resolution. Slope (along temperature) is used to impose restrictions to species distributions. Northness (in the range [0, 1]) is used to restrict fire spread. Aspect is used to draw a shaded relief map (at the user's request). Elevation is used to compute a lapse rate map (see below).
 
-+ **Temperature** (average of montly minimum temperatures) time series for the study area computed from palaeoclimatic data at annual resolution provided by the TraCe simulation. The single temperature value of every year is converted into a temperature map (200 x 200 m resolution) using a lapse rate map based on the elevation map.
++ **Temperature** (average of montly minimum temperatures) time series for the study area computed from palaeoclimatic data at annual resolution provided by the [TraCe simulation](http://www.cgd.ucar.edu/ccr/TraCE/), a transient model for the global climate evolution of the last 21K years with an annual resolution. The single temperature value of every year is converted into a temperature map (200 x 200 m resolution) using a lapse rate map based on the elevation map. Temperature, along with slope, is used to compute habitat suitability by using a logistic equation. Habitat suitability affects plant growth and survival.
 
 + **Fire**: The charcoal accumulation rate record from El Portalet palaeoenvironmental sequence (Gil-Romera et al., 2014) is used as input to simulate forest fires. A value of this time series is read each year, and a random number in the range [0, 1] is generated. If the random number is lower than the *Fire-probability-per-year* parameter defined by the user, the value from the charcoal time series is multiplied by the parameter Fire-ignitions-amplification-factor (defined by the user) to compute the number of ignitions for the given year. As many adult treeF as ignitions are selected to start spreading fire. Fire spreads to a neighbor patch if there is an adult tree in there, and a random number in the range [0, 1] is higher than the northness value of the patch.
 
@@ -2780,10 +2790,14 @@ The biotic layer of the model is composed by five tree species. We have introduc
 
 + **Population dynamics**, driven by species traits such as dispersal distance, longevity, fecundity, mortality, growth rate, post-fire response to fire, and heliophity (competition for light). The data is based on the literature and/or expert opinion from forest and fire ecologists, and it is used to simulate growth (using logistic equations), competition for light and space, decay due to senescence, and mortality due to climate, fire, or plagues.
 
+The model doesn't simulate the entire populations of the target species. Instead, on each 200 x 200 meters patch it simulates the dynamics of an small forest plot (around 10 x 10 meters) where a maximum of one individual per species can exist.
+
 
 ### Model dynamics
 
-We will illustrate the model dynamics by following an individual across its life. During the model setup seeds of every species are created on every patch. From there, every seed will go through the following steps every simulated year:
+**The life of an individual**
+
+During the model setup seeds of every species are created on every patch. From there, every seed will go through the following steps every simulated year:
 
 +  Its age increases by one year, and its life-stage is changed to "seedling".
 
@@ -2811,7 +2825,7 @@ We will illustrate the model dynamics by following an individual across its life
 
 +  If a fire reaches the patch and there are adult individuals of other species on it, the plant dies, and it is replaced by a seed (this seed inherites the traits of the parent).
 
-These steps continue while the individual is still a seedling, but once it reaches its maturity age it is marked as an adult, and after that some steps are slightly different:
+These steps continue while the individual is still a seedling, but once it reaches its maturity some steps become slightly different:
 
 +  If a random number in the range [0, 1] is lower than the adults mortality of the species, or the maximum age of the species is reached, the individual is marked for decay. The current biomass of decaying individuals is computed as *previous-biomass - years-of-decay*. To add the effect of climatic variability to this decreasing function, its result is multiplied by *1 - habitat-suitability x random[0, 10]*. If the biomass is higher than zero, pollen productivity is computed as *current-biomass x species-pollen-productivity*. The individual dies and is replaced by a seed when the biomass is below 1.
 
@@ -2819,39 +2833,118 @@ These steps continue while the individual is still a seedling, but once it reach
 
 +  If the individual starts a fire, or if fire spreads in from neighboring patches, it is marked as "burned", spreads fire to its neighbors, dies, and is replaced by a seed. If the individual belongs to an species with post-fire resprouting, the growth-rate of the seed is multiplied by 2 to boost growth after fire.
 
+**Simulating pollen and charcoal deposition**
 
-+  Simulating pollen and charcoal deposition: the pollen production of every living adult individual of each species is summed across all patches within the RSAP to compose the simulated pollen curves. The same is done with the biomass of the burned individuals to compose the virtual charcoal curve.
+The user defines the radius of a catchment area round the El Portalet core location (10 km by default). All patches withing this radius define the RSAP (relevant source area of pollen). 
 
+At the end of every simulated year the pollen production of every adult of each species within the RSAP is summed, and this value is used to compose the simulated pollen curves. The same is done with the biomass of the burned individuals to compose the virtual charcoal curve.
 
+### Output
 
+**Results table**
 
+The resulting data is exported to a table (csv format) with the following columns, and one row per simulated year:
 
-+ Pollen and charcoal sedimentation is simulated by defining an RSAP catchment area around the El Portalet core location (10 km radius).
++  age: simulated year.
++  temperature_minimum_average: average minimum winter temperature of the study area.
++  pollen_Psylvestris: pollen sum for Pinus sylvestris.
++  pollen_Puncinata
++  pollen_Bpendula
++  pollen_Cavellana
++  pollen_Qpetraea
++  real_charcoal: real charcoal values from El Portalet core.
++  ignitions: number of fire ignitions.
++  charcoal_sum: biomass sum of all burned individuals.
++  charcoal_Psylvestris: biomass sum of burned individuals of Pinus sylvestris.
++  charcoal_Puncinata
++  charcoal_Bpendula
++  charcoal_Cavellana
++  charcoal_Qpetraea
++  seeds_Psylvestris: number of seeds produced by adult individuals of Pinus sylvestris.
++  seedlings_Psylvestris: number of seedlings.
++  adults_Psylvestris: number of adults.
++  seeds_Puncinata
++  seedlings_Puncinata
++  adults_Puncinata
++  seeds_Bpendula
++  seedlings_Bpendula
++  adults_Bpendula
++  seeds_Cavellana
++  seedlings_Cavellana
++  adults_Cavellana
++  seeds_Qpetraea
++  seedlings_Qpetraea
 
-+ The model is evaluated by comparing the real pollen data (not used in the model) with the simulated pollen curves.
-
-+ The time resolution of the model is 1 year.
-
-+ The model doesn't simulate the entire population of the target species. Instead, on each 200 x 200 meters patch it simulates the dynamics of an small forest plot (around 10 x 10 meters) where a maximum of one individual per species can exist.
-
+**Graphical output**
 
 
 The model presents several graphical outputs:
-1. Modeled pollen variation for the 5 taxa studied during the time span considered (where 15kyr BP equals time 0). These simulated pollen spectra correspond to the pollen amounts recorded by a sensor at the area's center, matching El Portalet's location. The simulated pollen spectra can be cross-validated by the fossil pollen sequence previously obtained (González-Smapériz et al. 2006; Gil-Romera et al., 2014)
-2. Population dynamics presenting the number of adults, seedling and seeds produced along the considered period.
-3. Plots of the input values:
-- Minimum Temperature of the coldest month (MT) that has been identified as the most importan variable to explain these taxa presence in the area. This MT series corresponds to to the TraCe model (http://www.cgd.ucar.edu/ccr/TraCE/ a transient model for the global climate evolution of the last 21K years with an annual resolution).
-- A time series of environmental stochasticity (BLAS).
-- The recorded charcoal as a proxy of fire and the simulated charcoal recorded in the sensor.
++  Modeled pollen variation for the target taxa.
 
-The resutls for the cros-validation of simulated vs real pollen spectras, as well as a discussion in depth on the population dynamics CAN BE FOUND IN...
++ Population dynamics plots, showing the number of adults, seedling and seeds produced during the simulation.
+
++ Plots of the input values:
+	+ Minimum Temperature of the coldest month.
+	+ Charcoal.
+
 
 ## HOW TO USE IT
 
+### Input files
 
-(how to use the model, including a description of each of the items in the Interface tab)
+Input files are stored in a folder named "data". These are:
 
-Parameters
++  **age**: text file with no extension and a single column with no header containing age values from -15000 to -5701 
++  **fire**: text file with no extension and a single column with no header containing actual charcoal counts expresed in the range [0, 1]. There are as many rows as in the **age** file
++  **t_minimum_average**: text file with same features as the ones above containing minimum winter temperatures for the study area extracted from the TraCe simualtion.
++  **correct_t_minimum_average.asc**: Map at 200m resolution containing the minimum winter temperature difference (period 1970-2000) between the TraCe simulation and the Digital Climatic Atlas of the Iberian Peninsula. It is used to transform the values of **t_minimum_average** into a high resolution temperature map.
++  **elevation.asc**: digital elevation model of the study area at 200m resolution, coordinate system with EPSG code 23030.
++  **slope.asc**: topographic slope.
++  **topography.asc**: shaded relief map. It is used for plotting purposes only.
+
+### Input parameters
+
+**General configuration of the simulation**
+
++  **Output-path**: Character. Path of the output folder. This parameter cannot be empty.
++  **Snapshots?**: Boolean. If on, creates snapshots of the GUI to make videos.
++  **Snapshots-frequency**: Character. Defines the frequency of snapshots. Only two options: "every year" and "every 10 years".
++  **Draw-topography?**: Boolean. If on, plots a shaded relief map (stored in **topography.asc**).
++  **RSAP-radius**: Numeric[5, 50]. Radius of the RSAP in number of patches. Each patch is 200 x 200 m, so an RSAP-radius of 10 equals 2 kilometres.
++ **Randommness-settings**: Character. Allows to choose between "fixed seed" to obtain deterministic results, or "free seed" to obtain different results on each run.
++  **Max-biomass-per-patch**: Numeric, integer. Maximum charge capacity of a patch.
++  **Fire?**: Boolean. If on, fires are produced whenever the data **fire** triggers a fire event. If off, fires are not produced (control simulation).
++  **Fire-probability-per-year**: Numeric [0, 1]. Whenever the **fire** file provides a number higher than 0, if a random number in the range [0, 1] is lower than **Fire-probability-per-year**, a number of ignitions is computed (see below) and fires are triggered.
++  **Fire-ignitions-amplification-factor**: Numeric  The **fire** file provides values in the range [0, 1], and this multiplication factor converts these values in an integer number of ignitions. If **fire** equals one, and **Fire-ignitions-amplification-factor** equals 10, the number of ignitions will be 10 for the given year.
++  **Mortality?**: Boolean. If on, mortality due to predation, plagues and other unpredictable sources is active (see **Xx-seedling-mortality** and **Xx-adult-mortality** parameters below).
++  **Burn-in-iterations**: Numeric, integer. Number of years to run the model at a constant temperature (the initial one in the **t_minimum_average** file) and no fires to allow the population model to reach an equilibrium before to start the actual simulation.
++ **P.sylvestris?**, **P.uncinata?**, **B.pendula?**, **Q.petraea?**, and **C.avellana?**: Boolean. If off, the given species is removed from the simulation. Used for testing purposes.
+
+**Species traits**
+
++  **Xx-max-age**: Numeric, integer. Maximum longevity. Every individual reaching this age is marked for decay.
++  **Xx-maturity-age**: Numeric, integer. Age of sexual maturity. Individuals reaching this age are considered adults.
++  **Xx-pollen-productivity**: Numeric. Multiplier of biomass to obtain a relative measure of pollen productivity among species.
++  **Xx-growth-rate**: Numeric. Growth rate of the given species.
++  **Xx-max-biomass**: Numeric, integer. Maximum biomass reachable by the given species.
++  **Xx-heliophilia**: Numeric, [0, 1]. Dependance of the species on solar light to grow. It is used to compute the effect of competence in plant growth.
++  **Xx-seedling-tolerance**: Numeric, integer. Numer of years a seedling can tolerate unsuitable climate.
++  **Xx-adult-tolerance**: Numeric, integer. Numer of years an adult can tolerate unsuitable climate.
++  **Xx-seedling-mortality**: Numeric, [0, 1]. Proportion of seedlings dying due to predation.
++  **Xx-adult-mortality**: Numeric, [0, 1]. Proportion of adults dying due to plagues or other mortality sources.
++  **Xx-resprout-after-fire**: Boolean. If 0 the species doesn't show a post-fire response. If 1, **growth-rate** is multiplied by two in the resprouted individual to increase growth rate.
+
+The parameters describing species' niches are hard-coded because the GUI was already crammed with boxes:
+
++  **vegetation-niche-min-temperature-minimum-average**: Numeric. Minimum temperature at which the species has been found using GBIF presence data.
++  **vegetation-niche-min-slope**: Numeric. Minimum topographic slope at which the species has been found.
++  **vegetation-niche-max-slope**: Numeric. Maximum topographic slope at which the species has been found.
++  **vegetation-glm-coef-intercept**: Numeric. Intercept of the logistic equation to compute habitat suitability fitted to presence data and minimum temperature maps.
++  **vegetation-glm-coef-temperature-minimum-average**: Numeric. Coefficient of the logistic equation to compute habitat suitability.
+
+
+
+
 
 
 
