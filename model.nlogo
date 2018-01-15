@@ -13,7 +13,6 @@ globals
 [
   ;landscape globals
   landscape-area ;extension and resolution of the landscape coming from a GIS map
-  environmental-stochasticity-changed ;1 if stochasticity changed, 0 otherwise
 
   ;fire globals
   ;Fire-probability-per-year ;constant equal to 1/resolution of fire data, around 1/18
@@ -67,25 +66,6 @@ globals
   output-biomass-vegetation-species-D
   output-biomass-vegetation-species-E
   output-biomass-vegetation-sum
-
-  ;output life-stage
-  output-seeds-vegetation-species-A
-  output-seeds-vegetation-species-B
-  output-seeds-vegetation-species-C
-  output-seeds-vegetation-species-D
-  output-seeds-vegetation-species-E
-
-  output-seedlings-vegetation-species-A
-  output-seedlings-vegetation-species-B
-  output-seedlings-vegetation-species-C
-  output-seedlings-vegetation-species-D
-  output-seedlings-vegetation-species-E
-
-  output-adults-vegetation-species-A
-  output-adults-vegetation-species-B
-  output-adults-vegetation-species-C
-  output-adults-vegetation-species-D
-  output-adults-vegetation-species-E
 
   ;monitored patch and individuals
   monitored-patch
@@ -169,8 +149,8 @@ turtles-own
   vegetation-niche-max-slope
 
   ;glm coefficients to compute habitat suitability
-  vegetation-glm-coef-intercept
-  vegetation-glm-coef-temperature-minimum-average
+  vegetation-glm-intercept
+  vegetation-glm-coefficient
   vegetation-glm-habitat-suitability
 
   ;checking if habitat is suitable or not
@@ -211,9 +191,6 @@ to simulation-setup
   ;setting random seed
   if Randomness-settings = "Free seed, non-deterministic results" [random-seed random 2147483647]
   if Randomness-settings = "Fixed seed, deterministic results" [random-seed 10000]
-
-  ;exporting interface (to have a record of the parameters used)
-  export-interface word Output-path "/model_fire2_v12_configuration.png"
 
   ;LOADING GIS DATA
   input-load-gis-data
@@ -266,10 +243,6 @@ to simulation-setup
   ;PLOT TURTLES
   output-plot-turtles
 
-  ;DEFINES A MONITORED PATCH AND SELECTS THE TURTLES ON IT
-  set monitored-patch (patch-set patch monitored-x monitored-y)
-  ask monitored-patch [set pcolor white]
-
   ;BURN-IN (initiates population dynamics under the initial climatic conditions)
   set Burn-in-counter 0
   while [Burn-in-counter < Burn-in-iterations]
@@ -302,6 +275,9 @@ to simulation-setup
     tick
 
     ]
+
+  ;write parameters file
+  output-parameters-file
 
   ;reset ticks
   reset-ticks
@@ -358,10 +334,6 @@ to simulation-run
   ;POST FIRE RESPONSE
   biotic-post-fire-response
 
-  ;UPDATES MONITORED TURTLES
-  ask monitored-patch [set pcolor white]
-  set monitored-turtles turtles-on monitored-patch
-
   ;END SIMULATION
   if age-current = age-last
   [
@@ -401,12 +373,10 @@ end
 to abiotic-environmental-stochasticity
 
    ;only changes environmental stochasticity around every 10 years or more
-   ifelse random 100 < random 10
+   if random 100 < random 10
 
    ;the value landscape-random is updated
    [
-     ;confirming that the pattern has changed in the plot
-     set environmental-stochasticity-changed -10
 
      ;changing the pattern of spatial stochasticity
      ask patches
@@ -419,9 +389,6 @@ to abiotic-environmental-stochasticity
      if landscape-random < 0 [set landscape-random 0]
      ]
    ]
-
-   ;environmental stochasticity doesn't change (applying -15 to avoid plotting it)
-   [set environmental-stochasticity-changed -15]
 
 end
 
@@ -579,14 +546,14 @@ to biotic-generate-species-A
   set vegetation-traits-adult-mortality Ps-adult-mortality ;(Ps-adult-mortality / (Ps-max-age - Ps-maturity-age))
 
   ;PERCENTILE 05 and 95
-  set vegetation-niche-min-temperature-minimum-average -4.6
-  set vegetation-niche-max-temperature-minimum-average 6.8
-  set vegetation-niche-min-slope 4.2
-  set vegetation-niche-max-slope 31.4
+  set vegetation-niche-min-temperature-minimum-average Ps-min-temperature
+  set vegetation-niche-max-temperature-minimum-average Ps-max-temperature
+  set vegetation-niche-min-slope Ps-min-slope
+  set vegetation-niche-max-slope Ps-max-slope
 
   ;coefficients of glm equation to compute habitat suitability
-  set vegetation-glm-coef-intercept 2.02131
-  set vegetation-glm-coef-temperature-minimum-average 0.36198
+  set vegetation-glm-intercept Ps-intercept
+  set vegetation-glm-coefficient Ps-coefficient
 
   ;perturbation variables
   set vegetation-years-with-unsuitable-habitat 0
@@ -639,14 +606,14 @@ to biotic-generate-species-B
   set vegetation-traits-adult-mortality  Pu-adult-mortality ;(Pu-adult-mortality / (Pu-max-age - Pu-maturity-age))
 
   ;PERCENTILE 05 and 95
-  set vegetation-niche-min-temperature-minimum-average -1.1
-  set vegetation-niche-max-temperature-minimum-average 7.4
-  set vegetation-niche-min-slope 7.1
-  set vegetation-niche-max-slope 36.5
+  set vegetation-niche-min-temperature-minimum-average Pu-min-temperature
+  set vegetation-niche-max-temperature-minimum-average Pu-max-temperature
+  set vegetation-niche-min-slope Pu-min-slope
+  set vegetation-niche-max-slope Pu-max-slope
 
   ;coefficients of glm equation to compute habitat suitability
-  set vegetation-glm-coef-intercept 0.26950
-  set vegetation-glm-coef-temperature-minimum-average 0.61790
+  set vegetation-glm-intercept Pu-intercept
+  set vegetation-glm-coefficient Pu-coefficient
 
   ;perturbation variables
   set vegetation-years-with-unsuitable-habitat 0
@@ -698,14 +665,14 @@ to biotic-generate-species-C
   set vegetation-traits-adult-mortality Bp-adult-mortality ;(Bp-adult-mortality / (Bp-max-age - Bp-maturity-age))
 
   ;PERCENTILE 05 and 95
-  set vegetation-niche-min-temperature-minimum-average -2.8
-  set vegetation-niche-max-temperature-minimum-average 7
-  set vegetation-niche-min-slope 6.5
-  set vegetation-niche-max-slope 37.9
+  set vegetation-niche-min-temperature-minimum-average Bp-min-temperature
+  set vegetation-niche-max-temperature-minimum-average Bp-max-temperature
+  set vegetation-niche-min-slope Bp-min-slope
+  set vegetation-niche-max-slope Bp-max-slope
 
   ;coefficients of glm equation to compute habitat suitability
-  set vegetation-glm-coef-intercept 0.71627
-  set vegetation-glm-coef-temperature-minimum-average 0.2730
+  set vegetation-glm-intercept Bp-intercept
+  set vegetation-glm-coefficient Bp-coefficient
 
   ;perturbation variables
   set vegetation-years-with-unsuitable-habitat 0
@@ -758,14 +725,14 @@ to biotic-generate-species-D
   set vegetation-traits-adult-mortality Ca-adult-mortality ;(Ca-adult-mortality / (Ca-max-age - Ca-maturity-age))
 
   ;PERCENTILE 05 and 95
-  set vegetation-niche-min-temperature-minimum-average 0.3
-  set vegetation-niche-max-temperature-minimum-average 8.2
-  set vegetation-niche-min-slope 2.5
-  set vegetation-niche-max-slope 34.5
+  set vegetation-niche-min-temperature-minimum-average Ca-min-temperature
+  set vegetation-niche-max-temperature-minimum-average Ca-max-temperature
+  set vegetation-niche-min-slope Ca-min-slope
+  set vegetation-niche-max-slope Ca-max-slope
 
   ;coefficients of glm equation to compute habitat suitability
-  set vegetation-glm-coef-intercept 1.51796 ;Europe
-  set vegetation-glm-coef-temperature-minimum-average 0.84631 ;Europe
+  set vegetation-glm-intercept Ca-intercept
+  set vegetation-glm-coefficient Ca-coefficient
 
   ;perturbation variables
   set vegetation-years-with-unsuitable-habitat 0
@@ -818,14 +785,14 @@ to biotic-generate-species-E
   set vegetation-traits-adult-mortality Qp-adult-mortality ;(Qp-adult-mortality / (Qp-max-age - Qp-maturity-age))
 
   ;PERCENTILE 05 and 95
-  set vegetation-niche-min-temperature-minimum-average 2.5; -0.3
-  set vegetation-niche-max-temperature-minimum-average 7.5; 8.1
-  set vegetation-niche-min-slope 3.5
-  set vegetation-niche-max-slope 33.5
+  set vegetation-niche-min-temperature-minimum-average Qp-min-temperature
+  set vegetation-niche-max-temperature-minimum-average Qp-max-temperature
+  set vegetation-niche-min-slope Qp-min-slope
+  set vegetation-niche-max-slope Qp-max-slope
 
   ;coefficients of glm equation to compute habitat suitability
-  set vegetation-glm-coef-intercept -2.20832
-  set vegetation-glm-coef-temperature-minimum-average 0.81890
+  set vegetation-glm-intercept Qp-intercept
+  set vegetation-glm-coefficient Qp-coefficient
 
   ;perturbation variables
   set vegetation-years-with-unsuitable-habitat 0
@@ -866,7 +833,7 @@ end
 to biotic-compute-habitat-suitability
 
     ;computing habitat suitability
-    set vegetation-glm-habitat-suitability 1 / ( 1 + exp( -(vegetation-glm-coef-intercept + vegetation-glm-coef-temperature-minimum-average * landscape-temperature-minimum-average)))
+    set vegetation-glm-habitat-suitability 1 / ( 1 + exp( -(vegetation-glm-intercept + vegetation-glm-coefficient * landscape-temperature-minimum-average)))
 
     ;comparing GLM result with random number and applying environmental limits (to avoid extrapolation) to decide if habitat is suitable or not.
     ifelse landscape-random < vegetation-glm-habitat-suitability
@@ -1359,25 +1326,6 @@ to output-capture-proxy-data
   set output-biomass-vegetation-species-E sum [vegetation-traits-current-biomass] of vegetation-species-Es-on RSAP-area
   set output-biomass-vegetation-sum (output-biomass-vegetation-species-A + output-biomass-vegetation-species-B + output-biomass-vegetation-species-C + output-biomass-vegetation-species-D + output-biomass-vegetation-species-E)
 
-  ;output life-stage
-  set output-seeds-vegetation-species-A count (vegetation-species-As-on RSAP-area) with [vegetation-life-stage = "seed"]
-  set output-seeds-vegetation-species-B count (vegetation-species-Bs-on RSAP-area) with [vegetation-life-stage = "seed"]
-  set output-seeds-vegetation-species-C count (vegetation-species-Cs-on RSAP-area) with [vegetation-life-stage = "seed"]
-  set output-seeds-vegetation-species-D count (vegetation-species-Ds-on RSAP-area) with [vegetation-life-stage = "seed"]
-  set output-seeds-vegetation-species-E count (vegetation-species-Es-on RSAP-area) with [vegetation-life-stage = "seed"]
-
-  set output-seedlings-vegetation-species-A count (vegetation-species-As-on RSAP-area) with [vegetation-life-stage = "seedling"]
-  set output-seedlings-vegetation-species-B count (vegetation-species-Bs-on RSAP-area) with [vegetation-life-stage = "seedling"]
-  set output-seedlings-vegetation-species-C count (vegetation-species-Cs-on RSAP-area) with [vegetation-life-stage = "seedling"]
-  set output-seedlings-vegetation-species-D count (vegetation-species-Ds-on RSAP-area) with [vegetation-life-stage = "seedling"]
-  set output-seedlings-vegetation-species-E count (vegetation-species-Es-on RSAP-area) with [vegetation-life-stage = "seedling"]
-
-  set output-adults-vegetation-species-A count (vegetation-species-As-on RSAP-area) with [vegetation-life-stage = "adult"]
-  set output-adults-vegetation-species-B count (vegetation-species-Bs-on RSAP-area) with [vegetation-life-stage = "adult"]
-  set output-adults-vegetation-species-C count (vegetation-species-Cs-on RSAP-area) with [vegetation-life-stage = "adult"]
-  set output-adults-vegetation-species-D count (vegetation-species-Ds-on RSAP-area) with [vegetation-life-stage = "adult"]
-  set output-adults-vegetation-species-E count (vegetation-species-Es-on RSAP-area) with [vegetation-life-stage = "adult"]
-
 end
 
 ;;###########
@@ -1386,15 +1334,12 @@ end
 
 to output-snapshots
 
-  ;If the interruptor is activated
-  if Snapshots?
-  [
-    if Snapshots-frequency = "every year"
+    if Snapshots? = "every year"
     [
       export-view (word Output-path "/snapshot-" ticks age-current ".png")
       ]
 
-    if  Snapshots-frequency = "every 10 years"
+    if  Snapshots? = "every 10 years"
     [
       ;saving snapshot only every 10 years
       let word-ticks (word ticks)
@@ -1403,8 +1348,6 @@ to output-snapshots
         export-view (word Output-path "/snapshot-" ticks age-current ".png")
         ]
       ]
-
-    ]; end of Snapshots?
 
 end
 
@@ -1415,14 +1358,14 @@ end
 to output-create-file
 
   ;checks if the file exists
-  if (file-exists? word Output-path "/model_fire2_v12_results.csv")
+  if (file-exists? word Output-path "/output_table.csv")
   [carefully
-    [file-delete word Output-path  "/model_fire2_v12_results.csv"]
+    [file-delete word Output-path  "/output_table.csv"]
     [print error-message]
   ]
 
   ;creates the file
-  file-open word Output-path "/model_fire2_v12_results.csv"
+  file-open word Output-path "/output_table.csv"
   file-type "age;"
   file-type "temperature_minimum_average;"
   file-type "pollen_Psylvestris;"
@@ -1437,22 +1380,7 @@ to output-create-file
   file-type "charcoal_Puncinata;"
   file-type "charcoal_Bpendula;"
   file-type "charcoal_Cavellana;"
-  file-type "charcoal_Qpetraea;"
-  file-type "seeds_Psylvestris;"
-  file-type "seedlings_Psylvestris;"
-  file-type "adults_Psylvestris;"
-  file-type "seeds_Puncinata;"
-  file-type "seedlings_Puncinata;"
-  file-type "adults_Puncinata;"
-  file-type "seeds_Bpendula;"
-  file-type "seedlings_Bpendula;"
-  file-type "adults_Bpendula;"
-  file-type "seeds_Cavellana;"
-  file-type "seedlings_Cavellana;"
-  file-type "adults_Cavellana;"
-  file-type "seeds_Qpetraea;"
-  file-type "seedlings_Qpetraea;"
-  file-print "adults_Qpetraea"
+  file-type "charcoal_Qpetraea"
   file-close
 
 
@@ -1461,7 +1389,7 @@ end
 to output-write-file
 
   ;filling field by field
-  file-open word Output-path "/model_fire2_v12_results.csv"
+  file-open word Output-path "/output_table.csv"
   file-type (word age-current ";")
   file-type (word output-temperature-minimum-average ";")
   file-type (word output-pollen-vegetation-species-A ";")
@@ -1476,22 +1404,137 @@ to output-write-file
   file-type (word output-charcoal-vegetation-species-B ";")
   file-type (word output-charcoal-vegetation-species-C ";")
   file-type (word output-charcoal-vegetation-species-D ";")
-  file-type (word output-charcoal-vegetation-species-E ";")
-  file-type (word output-seeds-vegetation-species-A ";")
-  file-type (word output-seedlings-vegetation-species-A ";")
-  file-type (word output-adults-vegetation-species-A ";")
-  file-type (word output-seeds-vegetation-species-B ";")
-  file-type (word output-seedlings-vegetation-species-B ";")
-  file-type (word output-adults-vegetation-species-B ";")
-  file-type (word output-seeds-vegetation-species-C ";")
-  file-type (word output-seedlings-vegetation-species-C ";")
-  file-type (word output-adults-vegetation-species-C ";")
-  file-type (word output-seeds-vegetation-species-D ";")
-  file-type (word output-seedlings-vegetation-species-D ";")
-  file-type (word output-adults-vegetation-species-D ";")
-  file-type (word output-seeds-vegetation-species-E ";")
-  file-type (word output-seedlings-vegetation-species-E ";")
-  file-print (word output-adults-vegetation-species-E "")
+  file-type (word output-charcoal-vegetation-species-E "")
+  file-close
+
+end
+
+
+;;###############
+;;PARAMETERS FILE
+;;###############
+
+to output-parameters-file
+
+  ;checks if the file exists
+  if (file-exists? word Output-path "/input_parameters.txt")
+  [carefully
+    [file-delete word Output-path  "/input_parameters.txt"]
+    [print error-message]
+  ]
+
+  ;creates the file
+  file-open word Output-path "/input_parameters.txt"
+file-open word Output-path "/input_parameters.txt"
+file-type (word "Output-path: " Output-path "\n")
+file-type (word "Snapshots?: " Snapshots? "\n")
+file-type (word "Draw-topography?: " Draw-topography? "\n")
+file-type (word "RSAP-radius: " RSAP-radius "\n")
+file-type (word "Randomness-settings: " Randomness-settings "\n")
+file-type (word "Max-biomass-per-patch: " Max-biomass-per-patch "\n")
+
+
+file-type (word "Mortality?: " Mortality? "\n")
+file-type (word "Fire?: " Fire? "\n")
+file-type (word "Fire-probability-per-year: " Fire-probability-per-year "\n")
+file-type (word "Fire-ignitions-amplification-factor: " Fire-ignitions-amplification-factor "\n")
+file-type (word "Burn-in-iterations: " Burn-in-iterations "\n")
+
+
+file-type (word "P.sylvestris?: " P.sylvestris? "\n")
+file-type (word "Ps-max-age: " Ps-max-age "\n")
+file-type (word "Ps-maturity-age: " Ps-maturity-age "\n")
+file-type (word "Ps-pollen-productivity: " Ps-pollen-productivity "\n")
+file-type (word "Ps-growth-rate: " Ps-growth-rate "\n")
+file-type (word "Ps-max-biomass: " Ps-max-biomass "\n")
+file-type (word "Ps-heliophilia: " Ps-heliophilia "\n")
+file-type (word "Ps-seedling-tolerance: " Ps-seedling-tolerance "\n")
+file-type (word "Ps-adult-tolerance: " Ps-adult-tolerance "\n")
+file-type (word "Ps-seedling-mortality: " Ps-seedling-mortality "\n")
+file-type (word "Ps-adult-mortality: " Ps-adult-mortality "\n")
+file-type (word "Ps-resprout-after-fire: " Ps-resprout-after-fire "\n")
+file-type (word "Ps-min-slope: " Ps-min-slope "\n")
+file-type (word "Ps-max-slope: " Ps-max-slope "\n")
+file-type (word "Ps-min-temperature: " Ps-min-temperature "\n")
+file-type (word "Ps-max-temperature: " Ps-max-temperature "\n")
+file-type (word "Ps-intercept: " Ps-intercept "\n")
+file-type (word "Ps-coefficient: " Ps-coefficient "\n")
+
+file-type (word "P.uncinata?: " P.uncinata? "\n")
+file-type (word "Pu-max-age: " Pu-max-age "\n")
+file-type (word "Pu-maturity-age: " Pu-maturity-age "\n")
+file-type (word "Pu-pollen-productivity: " Pu-pollen-productivity "\n")
+file-type (word "Pu-growth-rate: " Pu-growth-rate "\n")
+file-type (word "Pu-max-biomass: " Pu-max-biomass "\n")
+file-type (word "Pu-heliophilia: " Pu-heliophilia "\n")
+file-type (word "Pu-seedling-tolerance: " Pu-seedling-tolerance "\n")
+file-type (word "Pu-adult-tolerance: " Pu-adult-tolerance "\n")
+file-type (word "Pu-seedling-mortality: " Pu-seedling-mortality "\n")
+file-type (word "Pu-adult-mortality: " Pu-adult-mortality "\n")
+file-type (word "Pu-resprout-after-fire: " Pu-resprout-after-fire "\n")
+file-type (word "Pu-min-slope: " Pu-min-slope "\n")
+file-type (word "Pu-max-slope: " Pu-max-slope "\n")
+file-type (word "Pu-min-temperature: " Pu-min-temperature "\n")
+file-type (word "Pu-max-temperature: " Pu-max-temperature "\n")
+file-type (word "Pu-intercept: " Pu-intercept "\n")
+file-type (word "Pu-coefficient: " Pu-coefficient "\n")
+
+file-type (word "B.pendula?: " B.pendula? "\n")
+file-type (word "Bp-max-age: " Bp-max-age "\n")
+file-type (word "Bp-maturity-age: " Bp-maturity-age "\n")
+file-type (word "Bp-pollen-productivity: " Bp-pollen-productivity "\n")
+file-type (word "Bp-growth-rate: " Bp-growth-rate "\n")
+file-type (word "Bp-max-biomass: " Bp-max-biomass "\n")
+file-type (word "Bp-heliophilia: " Bp-heliophilia "\n")
+file-type (word "Bp-seedling-tolerance: " Bp-seedling-tolerance "\n")
+file-type (word "Bp-adult-tolerance: " Bp-adult-tolerance "\n")
+file-type (word "Bp-seedling-mortality: " Bp-seedling-mortality "\n")
+file-type (word "Bp-adult-mortality: " Bp-adult-mortality "\n")
+file-type (word "Bp-resprout-after-fire: " Bp-resprout-after-fire "\n")
+file-type (word "Bp-min-slope: " Bp-min-slope "\n")
+file-type (word "Bp-max-slope: " Bp-max-slope "\n")
+file-type (word "Bp-min-temperature: " Bp-min-temperature "\n")
+file-type (word "Bp-max-temperature: " Bp-max-temperature "\n")
+file-type (word "Bp-intercept: " Bp-intercept "\n")
+file-type (word "Bp-coefficient: " Bp-coefficient "\n")
+
+file-type (word "Q.petraea?: " Q.petraea? "\n")
+file-type (word "Qp-max-age: " Qp-max-age "\n")
+file-type (word "Qp-maturity-age: " Qp-maturity-age "\n")
+file-type (word "Qp-pollen-productivity: " Qp-pollen-productivity "\n")
+file-type (word "Qp-growth-rate: " Qp-growth-rate "\n")
+file-type (word "Qp-max-biomass: " Qp-max-biomass "\n")
+file-type (word "Qp-heliophilia: " Qp-heliophilia "\n")
+file-type (word "Qp-seedling-tolerance: " Qp-seedling-tolerance "\n")
+file-type (word "Qp-adult-tolerance: " Qp-adult-tolerance "\n")
+file-type (word "Qp-seedling-mortality: " Qp-seedling-mortality "\n")
+file-type (word "Qp-adult-mortality: " Qp-adult-mortality "\n")
+file-type (word "Qp-resprout-after-fire: " Qp-resprout-after-fire "\n")
+file-type (word "Qp-min-slope: " Qp-min-slope "\n")
+file-type (word "Qp-max-slope: " Qp-max-slope "\n")
+file-type (word "Qp-min-temperature: " Qp-min-temperature "\n")
+file-type (word "Qp-max-temperature: " Qp-max-temperature "\n")
+file-type (word "Qp-intercept: " Qp-intercept "\n")
+file-type (word "Qp-coefficient: " Qp-coefficient "\n")
+
+file-type (word "C.avellana?: " C.avellana? "\n")
+file-type (word "Ca-max-age: " Ca-max-age "\n")
+file-type (word "Ca-maturity-age: " Ca-maturity-age "\n")
+file-type (word "Ca-pollen-productivity: " Ca-pollen-productivity "\n")
+file-type (word "Ca-growth-rate: " Ca-growth-rate "\n")
+file-type (word "Ca-max-biomass: " Ca-max-biomass "\n")
+file-type (word "Ca-heliophilia: " Ca-heliophilia "\n")
+file-type (word "Ca-seedling-tolerance: " Ca-seedling-tolerance "\n")
+file-type (word "Ca-adult-tolerance: " Ca-adult-tolerance "\n")
+file-type (word "Ca-seedling-mortality: " Ca-seedling-mortality "\n")
+file-type (word "Ca-adult-mortality: " Ca-adult-mortality "\n")
+file-type (word "Ca-resprout-after-fire: " Ca-resprout-after-fire "\n")
+file-type (word "Ca-min-slope: " Ca-min-slope "\n")
+file-type (word "Ca-max-slope: " Ca-max-slope "\n")
+file-type (word "Ca-min-temperature: " Ca-min-temperature "\n")
+file-type (word "Ca-max-temperature: " Ca-max-temperature "\n")
+file-type (word "Ca-intercept: " Ca-intercept "\n")
+file-type (word "Ca-coefficient: " Ca-coefficient "\n")
   file-close
 
 end
@@ -1524,10 +1567,10 @@ ticks
 30.0
 
 BUTTON
-19
-424
-188
-484
+23
+738
+388
+798
 Setup
 simulation-setup
 NIL
@@ -1541,10 +1584,10 @@ NIL
 1
 
 MONITOR
-206
-638
-378
-683
+196
+1014
+385
+1060
 NIL
 age-last
 17
@@ -1552,10 +1595,10 @@ age-last
 11
 
 MONITOR
-205
-594
-378
-639
+24
+1014
+197
+1059
 NIL
 age-current
 17
@@ -1563,10 +1606,10 @@ age-current
 11
 
 BUTTON
-19
-593
-191
-685
+23
+942
+386
+1015
 Run
 simulation-run
 T
@@ -1581,9 +1624,9 @@ NIL
 
 SLIDER
 23
-187
-182
-220
+320
+383
+354
 RSAP-radius
 RSAP-radius
 5
@@ -1595,11 +1638,11 @@ NIL
 HORIZONTAL
 
 PLOT
-22
-713
-1203
-833
-Average of monthly minimum temperature (blue) and changes in environmental stochasticity (red))
+1223
+532
+1982
+653
+Average of monthly minimum temperature
 age
 Celsius
 0.0
@@ -1611,13 +1654,12 @@ false
 "" ""
 PENS
 "average minimum" 1.0 0 -13345367 true "" "plot output-temperature-minimum-average"
-"environnmental stochasticity" 1.0 0 -2674135 true "" "plot environmental-stochasticity-changed"
 
 SWITCH
-20
-279
-376
-312
+23
+534
+387
+568
 Fire?
 Fire?
 0
@@ -1625,10 +1667,10 @@ Fire?
 -1000
 
 INPUTBOX
-20
-318
-189
-378
+23
+567
+178
+627
 Fire-probability-per-year
 0.2
 1
@@ -1636,10 +1678,10 @@ Fire-probability-per-year
 Number
 
 PLOT
-1226
-709
-1916
-829
+1225
+772
+1984
+893
 Simulated charcoal
 NIL
 NIL
@@ -1654,10 +1696,10 @@ PENS
 "charcoal" 1.0 0 -16777216 true "" "plot output-charcoal-vegetation-sum"
 
 PLOT
-1226
-589
-1913
-709
+1225
+652
+1984
+773
 Real charcoal
 NIL
 NIL
@@ -1673,10 +1715,10 @@ PENS
 "Fire ignitions" 1.0 1 -2674135 true "" "plot fire-ignitions-this-year"
 
 INPUTBOX
-197
-317
-376
-377
+177
+567
+386
+627
 Fire-ignitions-amplification-factor
 50.0
 1
@@ -1684,10 +1726,10 @@ Fire-ignitions-amplification-factor
 Number
 
 INPUTBOX
-390
-46
-550
-106
+392
+47
+552
+107
 Ps-max-age
 800.0
 1
@@ -1695,10 +1737,10 @@ Ps-max-age
 Number
 
 INPUTBOX
-390
-104
-550
-164
+392
+107
+552
+167
 Ps-maturity-age
 30.0
 1
@@ -1706,10 +1748,10 @@ Ps-maturity-age
 Number
 
 INPUTBOX
-390
-164
-550
-224
+392
+167
+552
+227
 Ps-pollen-productivity
 1.0
 1
@@ -1717,10 +1759,10 @@ Ps-pollen-productivity
 Number
 
 INPUTBOX
-390
-223
-550
-283
+392
+226
+552
+286
 Ps-growth-rate
 0.1
 1
@@ -1728,10 +1770,10 @@ Ps-growth-rate
 Number
 
 INPUTBOX
-390
-284
-550
-344
+392
+287
+552
+347
 Ps-max-biomass
 200.0
 1
@@ -1739,10 +1781,10 @@ Ps-max-biomass
 Number
 
 INPUTBOX
-390
-344
-552
-404
+392
+347
+554
+407
 Ps-heliophilia
 0.2
 1
@@ -1750,10 +1792,10 @@ Ps-heliophilia
 Number
 
 INPUTBOX
-390
-404
-550
-464
+392
+407
+552
+467
 Ps-seedling-tolerance
 10.0
 1
@@ -1761,10 +1803,10 @@ Ps-seedling-tolerance
 Number
 
 INPUTBOX
-390
-464
-550
-524
+392
+467
+552
+527
 Ps-adult-tolerance
 50.0
 1
@@ -1772,10 +1814,10 @@ Ps-adult-tolerance
 Number
 
 INPUTBOX
-390
-523
-550
-583
+392
+526
+552
+586
 Ps-seedling-mortality
 0.05
 1
@@ -1783,10 +1825,10 @@ Ps-seedling-mortality
 Number
 
 INPUTBOX
-390
-580
-550
-640
+392
+583
+552
+643
 Ps-adult-mortality
 0.001
 1
@@ -1794,10 +1836,10 @@ Ps-adult-mortality
 Number
 
 INPUTBOX
-390
-640
-551
-700
+392
+643
+553
+703
 Ps-resprout-after-fire
 0.0
 1
@@ -1816,10 +1858,10 @@ Pu-max-age
 Number
 
 INPUTBOX
-551
-104
-711
-164
+552
+107
+712
+167
 Pu-maturity-age
 30.0
 1
@@ -1827,10 +1869,10 @@ Pu-maturity-age
 Number
 
 INPUTBOX
-551
-164
-711
-224
+552
+167
+712
+227
 Pu-pollen-productivity
 1.0
 1
@@ -1838,10 +1880,10 @@ Pu-pollen-productivity
 Number
 
 INPUTBOX
-551
-223
-711
-283
+552
+226
+712
+286
 Pu-growth-rate
 0.1
 1
@@ -1849,10 +1891,10 @@ Pu-growth-rate
 Number
 
 INPUTBOX
-551
-284
-711
-344
+552
+287
+712
+347
 Pu-max-biomass
 200.0
 1
@@ -1860,10 +1902,10 @@ Pu-max-biomass
 Number
 
 INPUTBOX
-551
-344
-713
-404
+552
+347
+714
+407
 Pu-heliophilia
 0.2
 1
@@ -1871,10 +1913,10 @@ Pu-heliophilia
 Number
 
 INPUTBOX
-551
-404
-711
-464
+552
+407
+712
+467
 Pu-seedling-tolerance
 10.0
 1
@@ -1882,10 +1924,10 @@ Pu-seedling-tolerance
 Number
 
 INPUTBOX
-551
-464
-711
-524
+552
+467
+712
+527
 Pu-adult-tolerance
 50.0
 1
@@ -1893,10 +1935,10 @@ Pu-adult-tolerance
 Number
 
 INPUTBOX
-551
-523
-711
-583
+552
+526
+712
+586
 Pu-seedling-mortality
 0.05
 1
@@ -1904,10 +1946,10 @@ Pu-seedling-mortality
 Number
 
 INPUTBOX
-551
-580
-711
-640
+552
+583
+712
+643
 Pu-adult-mortality
 0.001
 1
@@ -1915,10 +1957,10 @@ Pu-adult-mortality
 Number
 
 INPUTBOX
-551
-640
-712
-700
+552
+643
+713
+703
 Pu-resprout-after-fire
 0.0
 1
@@ -1937,10 +1979,10 @@ Bp-max-age
 Number
 
 INPUTBOX
-712
-104
-872
-164
+713
+107
+873
+167
 Bp-maturity-age
 15.0
 1
@@ -1948,10 +1990,10 @@ Bp-maturity-age
 Number
 
 INPUTBOX
-712
-164
-872
-224
+713
+167
+873
+227
 Bp-pollen-productivity
 1.0
 1
@@ -1959,10 +2001,10 @@ Bp-pollen-productivity
 Number
 
 INPUTBOX
-712
-223
-872
-283
+713
+226
+873
+286
 Bp-growth-rate
 0.3
 1
@@ -1970,10 +2012,10 @@ Bp-growth-rate
 Number
 
 INPUTBOX
-712
-284
-872
-344
+713
+287
+873
+347
 Bp-max-biomass
 150.0
 1
@@ -1981,10 +2023,10 @@ Bp-max-biomass
 Number
 
 INPUTBOX
-712
-344
-874
-404
+713
+347
+875
+407
 Bp-heliophilia
 0.4
 1
@@ -1992,10 +2034,10 @@ Bp-heliophilia
 Number
 
 INPUTBOX
-712
-404
-872
-464
+713
+407
+873
+467
 Bp-seedling-tolerance
 5.0
 1
@@ -2003,10 +2045,10 @@ Bp-seedling-tolerance
 Number
 
 INPUTBOX
-712
-464
-872
-524
+713
+467
+873
+527
 Bp-adult-tolerance
 10.0
 1
@@ -2014,10 +2056,10 @@ Bp-adult-tolerance
 Number
 
 INPUTBOX
-712
-523
-872
-583
+713
+526
+873
+586
 Bp-seedling-mortality
 0.1
 1
@@ -2025,10 +2067,10 @@ Bp-seedling-mortality
 Number
 
 INPUTBOX
-712
-580
-872
-640
+713
+583
+873
+643
 Bp-adult-mortality
 0.008
 1
@@ -2036,10 +2078,10 @@ Bp-adult-mortality
 Number
 
 INPUTBOX
-712
-640
-873
-700
+713
+643
+874
+703
 Bp-resprout-after-fire
 1.0
 1
@@ -2058,10 +2100,10 @@ Ca-max-age
 Number
 
 INPUTBOX
-1036
-104
-1196
-164
+1037
+107
+1197
+167
 Ca-maturity-age
 10.0
 1
@@ -2069,10 +2111,10 @@ Ca-maturity-age
 Number
 
 INPUTBOX
-1036
-164
-1196
-224
+1037
+167
+1197
+227
 Ca-pollen-productivity
 1.0
 1
@@ -2080,10 +2122,10 @@ Ca-pollen-productivity
 Number
 
 INPUTBOX
-1036
-223
-1196
-283
+1037
+226
+1197
+286
 Ca-growth-rate
 0.3
 1
@@ -2091,10 +2133,10 @@ Ca-growth-rate
 Number
 
 INPUTBOX
-1036
-284
-1196
-344
+1037
+287
+1197
+347
 Ca-max-biomass
 150.0
 1
@@ -2102,10 +2144,10 @@ Ca-max-biomass
 Number
 
 INPUTBOX
-1036
-344
-1195
-404
+1037
+347
+1196
+407
 Ca-heliophilia
 0.4
 1
@@ -2113,10 +2155,10 @@ Ca-heliophilia
 Number
 
 INPUTBOX
-1036
-404
-1196
-464
+1037
+407
+1197
+467
 Ca-seedling-tolerance
 5.0
 1
@@ -2124,10 +2166,10 @@ Ca-seedling-tolerance
 Number
 
 INPUTBOX
-1036
-464
-1196
-524
+1037
+467
+1197
+527
 Ca-adult-tolerance
 15.0
 1
@@ -2135,10 +2177,10 @@ Ca-adult-tolerance
 Number
 
 INPUTBOX
-1036
-523
-1196
-583
+1037
+526
+1197
+586
 Ca-seedling-mortality
 0.2
 1
@@ -2146,10 +2188,10 @@ Ca-seedling-mortality
 Number
 
 INPUTBOX
-1036
-580
-1196
-640
+1037
+583
+1197
+643
 Ca-adult-mortality
 0.006
 1
@@ -2157,10 +2199,10 @@ Ca-adult-mortality
 Number
 
 INPUTBOX
-1036
-640
-1197
-700
+1037
+643
+1198
+703
 Ca-resprout-after-fire
 1.0
 1
@@ -2179,10 +2221,10 @@ Qp-max-age
 Number
 
 INPUTBOX
-874
-105
-1034
-165
+875
+108
+1035
+168
 Qp-maturity-age
 30.0
 1
@@ -2190,10 +2232,10 @@ Qp-maturity-age
 Number
 
 INPUTBOX
-874
-165
-1034
-225
+875
+168
+1035
+228
 Qp-pollen-productivity
 1.0
 1
@@ -2201,10 +2243,10 @@ Qp-pollen-productivity
 Number
 
 INPUTBOX
-874
-224
-1034
-284
+875
+227
+1035
+287
 Qp-growth-rate
 0.1
 1
@@ -2212,10 +2254,10 @@ Qp-growth-rate
 Number
 
 INPUTBOX
-874
-285
-1034
-345
+875
+288
+1035
+348
 Qp-max-biomass
 150.0
 1
@@ -2223,10 +2265,10 @@ Qp-max-biomass
 Number
 
 INPUTBOX
-874
-345
-1036
-405
+875
+348
+1037
+408
 Qp-heliophilia
 0.1
 1
@@ -2234,10 +2276,10 @@ Qp-heliophilia
 Number
 
 INPUTBOX
-874
-405
-1034
-465
+875
+408
+1035
+468
 Qp-seedling-tolerance
 10.0
 1
@@ -2245,10 +2287,10 @@ Qp-seedling-tolerance
 Number
 
 INPUTBOX
-874
-465
-1034
-525
+875
+468
+1035
+528
 Qp-adult-tolerance
 40.0
 1
@@ -2256,10 +2298,10 @@ Qp-adult-tolerance
 Number
 
 INPUTBOX
-874
-524
-1034
-584
+875
+527
+1035
+587
 Qp-seedling-mortality
 0.1
 1
@@ -2267,10 +2309,10 @@ Qp-seedling-mortality
 Number
 
 INPUTBOX
-874
-581
-1034
-641
+875
+584
+1035
+644
 Qp-adult-mortality
 0.002
 1
@@ -2278,10 +2320,10 @@ Qp-adult-mortality
 Number
 
 INPUTBOX
-874
-640
-1035
-700
+875
+643
+1036
+703
 Qp-resprout-after-fire
 1.0
 1
@@ -2289,10 +2331,10 @@ Qp-resprout-after-fire
 Number
 
 INPUTBOX
-198
-152
-376
-220
+23
+415
+385
+484
 Max-biomass-per-patch
 500.0
 1
@@ -2300,10 +2342,10 @@ Max-biomass-per-patch
 Number
 
 PLOT
-21
-831
-1203
-951
+1225
+892
+1984
+1013
 Pollen of Pinus uncinata
 NIL
 NIL
@@ -2318,10 +2360,10 @@ PENS
 "Pinus uncinata" 1.0 0 -12087248 true "" "plot output-pollen-vegetation-species-B"
 
 PLOT
-22
-950
-1204
-1070
+1225
+1013
+1983
+1134
 Pollen of Pinus sylvestris
 NIL
 NIL
@@ -2336,10 +2378,10 @@ PENS
 "Pinus sylvestris" 1.0 0 -6565750 true "" "plot output-pollen-vegetation-species-A"
 
 PLOT
-22
-1068
-1206
-1188
+1225
+1130
+1983
+1251
 Pollen of Betula pendula
 NIL
 NIL
@@ -2354,10 +2396,10 @@ PENS
 "Betula pendula" 1.0 0 -4079321 true "" "plot output-pollen-vegetation-species-C"
 
 PLOT
-22
-1306
-1207
-1426
+1225
+1369
+1983
+1490
 Pollen of Corylus avellana
 NIL
 NIL
@@ -2371,91 +2413,11 @@ false
 PENS
 "Corylus avellana" 1.0 0 -2064490 true "" "plot output-pollen-vegetation-species-D"
 
-PLOT
-1226
-949
-1993
-1069
-Population dynamics of Pinus sylvestris
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-true
-"" ""
-PENS
-"seeds" 1.0 0 -3026479 true "" "plot output-seeds-vegetation-species-A"
-"seedlings" 1.0 0 -13345367 true "" "plot output-seedlings-vegetation-species-A"
-"adults" 1.0 0 -2674135 true "" "plot output-adults-vegetation-species-A"
-
-PLOT
-1226
-829
-1994
-949
-Population dynamics of Pinus uncinata
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-true
-"" ""
-PENS
-"seeds" 1.0 0 -3026479 true "" "plot output-seeds-vegetation-species-B"
-"seedlings" 1.0 0 -13345367 true "" "plot output-seedlings-vegetation-species-B"
-"adults" 1.0 0 -2674135 true "" "plot output-adults-vegetation-species-B"
-
-PLOT
-1229
-1069
-1995
-1189
-Population dynamics of Betula pendula
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-true
-"" ""
-PENS
-"seeds" 1.0 0 -3026479 true "" "plot output-seeds-vegetation-species-C"
-"seedlings" 1.0 0 -13345367 true "" "plot output-seedlings-vegetation-species-C"
-"adults" 1.0 0 -2674135 true "" "plot output-adults-vegetation-species-C"
-
-PLOT
-1226
-1307
-1990
-1427
-Population dynamics of Corylus avellana
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-true
-"" ""
-PENS
-"seeds" 1.0 0 -3026479 true "" "plot output-seeds-vegetation-species-D"
-"seedlings" 1.0 0 -13345367 true "" "plot output-seedlings-vegetation-species-D"
-"adults" 1.0 0 -2674135 true "" "plot output-adults-vegetation-species-D"
-
 SWITCH
-20
-145
-182
-178
+24
+216
+386
+250
 Draw-topography?
 Draw-topography?
 1
@@ -2463,21 +2425,21 @@ Draw-topography?
 -1000
 
 INPUTBOX
-200
-425
-380
-485
+23
+678
+388
+738
 Burn-in-iterations
-1000.0
+100.0
 1
 0
 Number
 
 MONITOR
-199
-491
-377
-536
+23
+798
+387
+844
 Current burn-in iteration
 Burn-in-counter
 0
@@ -2485,27 +2447,10 @@ Burn-in-counter
 11
 
 BUTTON
-20
-553
-379
-589
-Run one year
-simulation-run
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-0
-
-BUTTON
-19
-487
-189
-536
+22
+844
+387
+878
 Restart plots
 clear-all-plots
 NIL
@@ -2519,10 +2464,10 @@ NIL
 0
 
 PLOT
-22
-1186
-1206
-1306
+1225
+1249
+1983
+1370
 Pollen of Quercus petraea
 NIL
 NIL
@@ -2536,52 +2481,21 @@ false
 PENS
 "Quercus petraea" 1.0 0 -3844592 true "" "plot output-pollen-vegetation-species-E"
 
-PLOT
-1226
-1189
-1993
-1309
-Population dynamics of Quercus petraea
-NIL
-NIL
-0.0
-10.0
-0.0
-10.0
-true
-true
-"" ""
-PENS
-"seeds" 1.0 0 -3026479 true "" "plot output-seeds-vegetation-species-E"
-"seedlings" 1.0 0 -13345367 true "" "plot output-seedlings-vegetation-species-E"
-"adults" 1.0 0 -2674135 true "" "plot output-adults-vegetation-species-E"
-
-SWITCH
-22
-100
-185
-133
-Snapshots?
-Snapshots?
-1
-1
--1000
-
 CHOOSER
-199
-100
-378
-145
-Snapshots-frequency
-Snapshots-frequency
-"every 10 years" "every year"
-0
+25
+158
+385
+204
+Snapshots?
+Snapshots?
+"no snapshots" "every 10 years" "every year"
+1
 
 INPUTBOX
-22
-32
-380
-92
+26
+63
+385
+147
 Output-path
 /home/blas/Dropbox/RESEARCH/COLLABORATIONS/compartido_modelos_fuego/5_model/code/output
 1
@@ -2589,103 +2503,13 @@ Output-path
 String
 
 CHOOSER
-22
-227
-375
-272
+24
+362
+383
+408
 Randomness-settings
 Randomness-settings
 "Fixed seed, deterministic results" "Free seed, non-deterministic results"
-1
-
-PLOT
-22
-1522
-1207
-1672
-Monitored individuals biomass
-Time
-Biomass
-0.0
-10.0
-0.0
-10.0
-true
-true
-"" "ask monitored-turtles [\n  create-temporary-plot-pen (word vegetation-species)\n  set-plot-pen-color color\n  plotxy ticks vegetation-traits-current-biomass\n]"
-PENS
-
-PLOT
-20
-1674
-1208
-1824
-Monitored individuals suitability
-Time
-Suitability
-0.0
-10.0
-0.0
-1.0
-true
-true
-"" "ask monitored-turtles [\n  create-temporary-plot-pen (word vegetation-species)\n  set-plot-pen-color color\n  plotxy ticks vegetation-glm-habitat-suitability\n]"
-PENS
-
-PLOT
-20
-1825
-1208
-1975
-Monitored individuals age
-Time
-Age
-0.0
-10.0
-0.0
-10.0
-true
-true
-"" "ask monitored-turtles [\n  create-temporary-plot-pen (word vegetation-species)\n  set-plot-pen-color color\n  plotxy ticks vegetation-traits-current-age\n]"
-PENS
-
-INPUTBOX
-22
-1459
-183
-1519
-monitored-x
-85.0
-1
-0
-Number
-
-INPUTBOX
-186
-1459
-347
-1519
-monitored-y
--10.0
-1
-0
-Number
-
-BUTTON
-354
-1460
-502
-1519
-Run
-simulation-run
-T
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
 1
 
 SWITCH
@@ -2744,23 +2568,383 @@ C.avellana?
 -1000
 
 SWITCH
-20
-384
-189
-417
+23
+493
+387
+527
 Mortality?
 Mortality?
 0
 1
 -1000
 
+INPUTBOX
+391
+704
+553
+765
+Ps-min-slope
+4.2
+1
+0
+Number
+
+INPUTBOX
+391
+762
+553
+823
+Ps-max-slope
+31.4
+1
+0
+Number
+
+INPUTBOX
+391
+820
+553
+881
+Ps-min-temperature
+-4.6
+1
+0
+Number
+
+INPUTBOX
+391
+880
+553
+941
+Ps-max-temperature
+6.8
+1
+0
+Number
+
+INPUTBOX
+391
+940
+553
+1001
+Ps-intercept
+2.02131
+1
+0
+Number
+
+INPUTBOX
+391
+1000
+553
+1061
+Ps-coefficient
+0.36198
+1
+0
+Number
+
+INPUTBOX
+552
+703
+713
+763
+Pu-min-slope
+7.1
+1
+0
+Number
+
+INPUTBOX
+552
+762
+713
+822
+Pu-max-slope
+36.5
+1
+0
+Number
+
+INPUTBOX
+552
+820
+713
+880
+Pu-min-temperature
+-1.1
+1
+0
+Number
+
+INPUTBOX
+552
+880
+714
+940
+Pu-max-temperature
+7.4
+1
+0
+Number
+
+INPUTBOX
+552
+940
+714
+1000
+Pu-intercept
+0.2695
+1
+0
+Number
+
+INPUTBOX
+553
+1000
+715
+1060
+Pu-coefficient
+0.6179
+1
+0
+Number
+
+INPUTBOX
+714
+703
+876
+763
+Bp-min-slope
+6.5
+1
+0
+Number
+
+INPUTBOX
+714
+762
+876
+822
+Bp-max-slope
+37.9
+1
+0
+Number
+
+INPUTBOX
+713
+821
+875
+881
+Bp-min-temperature
+-2.8
+1
+0
+Number
+
+INPUTBOX
+713
+880
+875
+940
+Bp-max-temperature
+7.0
+1
+0
+Number
+
+INPUTBOX
+714
+940
+876
+1000
+Bp-intercept
+0.71627
+1
+0
+Number
+
+INPUTBOX
+714
+1000
+876
+1060
+Bp-coefficient
+0.273
+1
+0
+Number
+
+INPUTBOX
+876
+703
+1038
+763
+Qp-min-slope
+3.5
+1
+0
+Number
+
+INPUTBOX
+876
+763
+1038
+823
+Qp-max-slope
+33.5
+1
+0
+Number
+
+INPUTBOX
+875
+822
+1037
+882
+Qp-min-temperature
+2.5
+1
+0
+Number
+
+INPUTBOX
+875
+881
+1037
+941
+Qp-max-temperature
+7.5
+1
+0
+Number
+
+INPUTBOX
+875
+940
+1037
+1000
+Qp-intercept
+-2.20832
+1
+0
+Number
+
+INPUTBOX
+876
+1000
+1038
+1060
+Qp-coefficient
+0.8189
+1
+0
+Number
+
+INPUTBOX
+1037
+703
+1199
+763
+Ca-min-slope
+2.5
+1
+0
+Number
+
+INPUTBOX
+1037
+763
+1199
+823
+Ca-max-slope
+34.5
+1
+0
+Number
+
+INPUTBOX
+1038
+823
+1200
+883
+Ca-min-temperature
+0.3
+1
+0
+Number
+
+INPUTBOX
+1037
+883
+1199
+943
+Ca-max-temperature
+8.2
+1
+0
+Number
+
+INPUTBOX
+1037
+940
+1199
+1000
+Ca-intercept
+1.51796
+1
+0
+Number
+
+INPUTBOX
+1037
+1000
+1199
+1060
+Ca-coefficient
+0.84631
+1
+0
+Number
+
 TEXTBOX
-520
-1466
-980
-1515
-This section is for testing purposes only. It allows the user to monitor the behavior of the model in a single patch defined by its cordinates monitored-x and monitored-y
-12
+145
+648
+390
+688
+INITIALIZATION
+16
+0.0
+1
+
+TEXTBOX
+130
+907
+297
+927
+RUN SIMULATION
+16
+0.0
+1
+
+TEXTBOX
+134
+293
+301
+313
+CONFIGURATION
+16
+0.0
+1
+
+TEXTBOX
+165
+33
+332
+53
+OUTPUT
+16
 0.0
 1
 
@@ -2835,15 +3019,31 @@ These steps continue while the individual is still a seedling, but once it reach
 
 **Simulating pollen and charcoal deposition**
 
-The user defines the radius of a catchment area round the El Portalet core location (10 km by default). All patches withing this radius define the RSAP (relevant source area of pollen). 
+The user defines the radius of a catchment area round the core location (10 km by default, that is 50 patches). All patches within this radius define the RSAP (relevant source area of pollen). 
 
-At the end of every simulated year the pollen production of every adult of each species within the RSAP is summed, and this value is used to compose the simulated pollen curves. The same is done with the biomass of the burned individuals to compose the virtual charcoal curve.
+At the end of every simulated year the pollen productivity of every adult of each species within the RSAP is summed, and this value is used to compose the simulated pollen curves. The same is done with the biomass of the burned individuals to compose the virtual charcoal curve.
 
 ### Output
 
-**Results table**
+**In GUI**
 
-The resulting data is exported to a table (csv format) with the following columns, and one row per simulated year:
+The simulation GUI shows the following results in real time:
+
++  Plots of the input values:
+	+ Minimum Temperature of the coldest month.
+	+ Real charcoal data.
+
++  Simulated pollen curves for the target taxa.
+
++  Simulated charcoal curve.
+
++  Map showing the distribution of every species and the forest fires.
+
+**Written to disk**
+
+
+
+The simulated pollen counts and charcoal is exported to the path defined by the user as a table in csv format named **output_table.csv**. It contains one row per simulated year and the following columns:
 
 +  age: simulated year.
 +  temperature_minimum_average: average minimum winter temperature of the study area.
@@ -2855,37 +3055,13 @@ The resulting data is exported to a table (csv format) with the following column
 +  real_charcoal: real charcoal values from El Portalet core.
 +  ignitions: number of fire ignitions.
 +  charcoal_sum: biomass sum of all burned individuals.
-+  charcoal_Psylvestris: biomass sum of burned individuals of Pinus sylvestris.
++  charcoal_Psylvestris: sum of the biomass of burned individuals of Pinus sylvestris.
 +  charcoal_Puncinata
 +  charcoal_Bpendula
 +  charcoal_Cavellana
 +  charcoal_Qpetraea
-+  seeds_Psylvestris: number of seeds produced by adult individuals of Pinus sylvestris.
-+  seedlings_Psylvestris: number of seedlings.
-+  adults_Psylvestris: number of adults.
-+  seeds_Puncinata
-+  seedlings_Puncinata
-+  adults_Puncinata
-+  seeds_Bpendula
-+  seedlings_Bpendula
-+  adults_Bpendula
-+  seeds_Cavellana
-+  seedlings_Cavellana
-+  adults_Cavellana
-+  seeds_Qpetraea
-+  seedlings_Qpetraea
 
-**Graphical output**
-
-
-The model presents several graphical outputs:
-+  Modeled pollen variation for the target taxa.
-
-+ Population dynamics plots, showing the number of adults, seedling and seeds produced during the simulation.
-
-+ Plots of the input values:
-	+ Minimum Temperature of the coldest month.
-	+ Charcoal.
+Snapshots of the simulation map taken at 1 or 10 years intervals are stored in the output folder is requested by the user. These snapshots are useful to compose a video of the simulation.
 
 
 ## HOW TO USE IT
@@ -2906,7 +3082,9 @@ Input files are stored in a folder named "data". These are:
 
 **General configuration of the simulation**
 
-+  **Output-path**: Character. Path of the output folder. This parameter cannot be empty.
+The user can set-up the following parameters throught the GUI controls.
+
++  **Output-path**: Character. Path of the output folder. This parameter cannot be empty, and the output folder must exist.
 +  **Snapshots?**: Boolean. If on, creates snapshots of the GUI to make videos.
 +  **Snapshots-frequency**: Character. Defines the frequency of snapshots. Only two options: "every year" and "every 10 years".
 +  **Draw-topography?**: Boolean. If on, plots a shaded relief map (stored in **topography.asc**).
@@ -2922,6 +3100,8 @@ Input files are stored in a folder named "data". These are:
 
 **Species traits**
 
+Each species has a set of traits to be filled by the user. Note that a particular species can be removed from the simulation by switching it to "off". 
+
 +  **Xx-max-age**: Numeric, integer. Maximum longevity. Every individual reaching this age is marked for decay.
 +  **Xx-maturity-age**: Numeric, integer. Age of sexual maturity. Individuals reaching this age are considered adults.
 +  **Xx-pollen-productivity**: Numeric. Multiplier of biomass to obtain a relative measure of pollen productivity among species.
@@ -2933,14 +3113,12 @@ Input files are stored in a folder named "data". These are:
 +  **Xx-seedling-mortality**: Numeric, [0, 1]. Proportion of seedlings dying due to predation.
 +  **Xx-adult-mortality**: Numeric, [0, 1]. Proportion of adults dying due to plagues or other mortality sources.
 +  **Xx-resprout-after-fire**: Boolean. If 0 the species doesn't show a post-fire response. If 1, **growth-rate** is multiplied by two in the resprouted individual to increase growth rate.
-
-The parameters describing species' niches are hard-coded because the GUI was already crammed with boxes:
-
-+  **vegetation-niche-min-temperature-minimum-average**: Numeric. Minimum temperature at which the species has been found using GBIF presence data.
-+  **vegetation-niche-min-slope**: Numeric. Minimum topographic slope at which the species has been found.
-+  **vegetation-niche-max-slope**: Numeric. Maximum topographic slope at which the species has been found.
-+  **vegetation-glm-coef-intercept**: Numeric. Intercept of the logistic equation to compute habitat suitability fitted to presence data and minimum temperature maps.
-+  **vegetation-glm-coef-temperature-minimum-average**: Numeric. Coefficient of the logistic equation to compute habitat suitability.
++  **Xx-min-temperature**: Numeric. Minimum temperature at which the species has been found using GBIF presence data.
++  **Xx-max-temperature**: Numeric. Maximum temperature at which the species has been found using GBIF presence data.
++  **Xx-min-slope**: Numeric. Minimum topographic slope at which the species has been found.
++  **Xx-max-slope**: Numeric. Maximum topographic slope at which the species has been found.
++  **Xx-intercept**: Numeric. Intercept of the logistic equation to compute habitat suitability fitted to presence data and minimum temperature maps.
++  **Xx-coefficient**: Numeric. Coefficient of the logistic equation to compute habitat suitability.
 
 
 
