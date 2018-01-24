@@ -12,15 +12,52 @@ unzip("netlogo.zip")
 
 #INSTALLING AND LOADING LIBRARIES
 ########################################
-#IN UBUNTU: 
+
+#INSTALLING JAVA WITH SUDO IN MY LOCAL MACHINE: 
 # sudo apt-get install default-jdk
 # sudo update-alternatives --config java (check path here and use it in the next line)
 # export LD_LIBRARY_PATH=/usr/lib/jvm/java-8-openjdk-amd64/jre/bin/java
 # sudo R CMD javareconf
 
+
+#INSTALLING rJava IN THE VIRTUAL MACHINE
+#Open ssh connection from your computer. RSA key is required. Change IP as needed. sudo doesn't require password
+#ssh -i /home/blas/Dropbox/AMAZON_CLOUD/Rstudio.pem ubuntu@18.196.153.217
+#sudo apt-get install r-cran-rjava
+#sudo update-alternatives --config java #not really required
+#sudo R CMD javareconf
+
+
+#INSTALLING JAVA WITHOUT SUDO
+#download tarball from my dropbox
+download.file(url="https://www.dropbox.com/s/w563mneihaftj1e/java.tar.gz?raw=1", destfile="java.tar.gz")
+
+#decompress
+untar("java.tar.gz")
+
+#IN tools>shell (not rstudio console)
+# export JAVA_HOME="/home/rstudio/PalaeoFireModeling/jdk1.8.0_161/jre"
+# export PATH="$JAVA_HOME/bin:$PATH"
+# R CMD javareconf
+
+
+
+# export JAVA_HOME="/home/rstudio/PalaeoFireModeling/jdk1.8.0_161/"
+# export JAVA_JRE="/home/rstudio/PalaeoFireModeling/jdk1.8.0_161/jre/bin"
+# export PATH="/home/rstudio/PalaeoFireModeling/jdk1.8.0_161/bin:$PATH"
+# export PATH="/home/rstudio/PalaeoFireModeling/jdk1.8.0_161/jre/bin:$PATH"
+# export JAVA_CPPFLAGS="-I/home/rstudio/PalaeoFireModeling/jdk1.8.0_161/include -I/home/rstudio/PalaeoFireModeling/jdk1.8.0_161/include/linux"
+# export JAVA="$JAVA_HOME/bin/java"
+# export JAVA_LIBS="-L/home/rstudio/PalaeoFireModeling/jdk1.8.0_161/jre/lib/amd64/server -ljvm"
+# export LD_LIBRARY_PATH=$JAVA_HOME/jre/lib/amd64:$JAVA_HOME/jre/lib/amd64/server
+
+# Source .bashrc file in console: source .bashrc
+# Run R CMD javareconf -e in console to ensure that all is correct.
+
+
 #IN R, installing libraries
 # install.packages("rJava", dep=TRUE)
-# install.packages("RNetLogo", dep=TRUE)
+install.packages("RNetLogo", dep=TRUE)
 
 #loading library
 library("RNetLogo")
