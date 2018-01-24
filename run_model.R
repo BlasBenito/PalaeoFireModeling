@@ -47,7 +47,7 @@ dir.create(output.folder)
 #####################################
 #starting netlogo
 #note: set gui=FALSE for headless execution in server
-NLStart(netlogo.path, gui=TRUE, nl.jarname="netlogo-6.0.2.jar")
+NLStart(netlogo.path, gui=FALSE, nl.jarname="netlogo-6.0.2.jar")
 #loading your model
 NLLoadModel(model.path)
 
