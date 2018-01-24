@@ -11,6 +11,9 @@ extensions [gis]
 ;;################
 globals
 [
+  ;output path, had to remove it from the GUI to be able to change it form R. NLCommand was failing to do so...
+  Ouput-path
+
   ;landscape globals
   landscape-area ;extension and resolution of the landscape coming from a GIS map
 
@@ -1380,7 +1383,7 @@ to output-create-file
   file-type "charcoal_Puncinata;"
   file-type "charcoal_Bpendula;"
   file-type "charcoal_Cavellana;"
-  file-type "charcoal_Qpetraea"
+  file-type "charcoal_Qpetraea \n"
   file-close
 
 
@@ -1404,7 +1407,7 @@ to output-write-file
   file-type (word output-charcoal-vegetation-species-B ";")
   file-type (word output-charcoal-vegetation-species-C ";")
   file-type (word output-charcoal-vegetation-species-D ";")
-  file-type (word output-charcoal-vegetation-species-E "")
+  file-type (word output-charcoal-vegetation-species-E "\n")
   file-close
 
 end
@@ -1587,7 +1590,7 @@ MONITOR
 196
 1014
 385
-1060
+1059
 NIL
 age-last
 17
@@ -1626,7 +1629,7 @@ SLIDER
 23
 320
 383
-354
+353
 RSAP-radius
 RSAP-radius
 5
@@ -1659,10 +1662,10 @@ SWITCH
 23
 534
 387
-568
+567
 Fire?
 Fire?
-0
+1
 1
 -1000
 
@@ -1672,7 +1675,7 @@ INPUTBOX
 178
 627
 Fire-probability-per-year
-0.2
+0.0
 1
 0
 Number
@@ -1720,7 +1723,7 @@ INPUTBOX
 386
 627
 Fire-ignitions-amplification-factor
-50.0
+0.0
 1
 0
 Number
@@ -2417,7 +2420,7 @@ SWITCH
 24
 216
 386
-250
+249
 Draw-topography?
 Draw-topography?
 1
@@ -2430,7 +2433,7 @@ INPUTBOX
 388
 738
 Burn-in-iterations
-100.0
+10.0
 1
 0
 Number
@@ -2439,7 +2442,7 @@ MONITOR
 23
 798
 387
-844
+843
 Current burn-in iteration
 Burn-in-counter
 0
@@ -2485,28 +2488,17 @@ CHOOSER
 25
 158
 385
-204
+203
 Snapshots?
 Snapshots?
 "no snapshots" "every 10 years" "every year"
-1
-
-INPUTBOX
-26
-63
-385
-147
-Output-path
-/home/blas/Dropbox/RESEARCH/COLLABORATIONS/compartido_modelos_fuego/5_model/code/output
-1
 0
-String
 
 CHOOSER
 24
 362
 383
-408
+407
 Randomness-settings
 Randomness-settings
 "Fixed seed, deterministic results" "Free seed, non-deterministic results"
@@ -2571,7 +2563,7 @@ SWITCH
 23
 493
 387
-527
+526
 Mortality?
 Mortality?
 0
@@ -2947,6 +2939,17 @@ OUTPUT
 16
 0.0
 1
+
+INPUTBOX
+25
+58
+385
+148
+Output-path
+output/repetition_1
+1
+0
+String
 
 @#$#@#$#@
 ## WHAT IS IT?
