@@ -26,38 +26,13 @@ unzip("netlogo.zip")
 #sudo apt-get install r-cran-rjava
 #sudo update-alternatives --config java #not really required
 #sudo R CMD javareconf
+#reboot system
 
-
-#INSTALLING JAVA WITHOUT SUDO
-#download tarball from my dropbox
-download.file(url="https://www.dropbox.com/s/w563mneihaftj1e/java.tar.gz?raw=1", destfile="java.tar.gz")
-
-#decompress
-untar("java.tar.gz")
-
-#IN tools>shell (not rstudio console)
-# export JAVA_HOME="/home/rstudio/PalaeoFireModeling/jdk1.8.0_161/jre"
-# export PATH="$JAVA_HOME/bin:$PATH"
-# R CMD javareconf
-
-
-
-# export JAVA_HOME="/home/rstudio/PalaeoFireModeling/jdk1.8.0_161/"
-# export JAVA_JRE="/home/rstudio/PalaeoFireModeling/jdk1.8.0_161/jre/bin"
-# export PATH="/home/rstudio/PalaeoFireModeling/jdk1.8.0_161/bin:$PATH"
-# export PATH="/home/rstudio/PalaeoFireModeling/jdk1.8.0_161/jre/bin:$PATH"
-# export JAVA_CPPFLAGS="-I/home/rstudio/PalaeoFireModeling/jdk1.8.0_161/include -I/home/rstudio/PalaeoFireModeling/jdk1.8.0_161/include/linux"
-# export JAVA="$JAVA_HOME/bin/java"
-# export JAVA_LIBS="-L/home/rstudio/PalaeoFireModeling/jdk1.8.0_161/jre/lib/amd64/server -ljvm"
-# export LD_LIBRARY_PATH=$JAVA_HOME/jre/lib/amd64:$JAVA_HOME/jre/lib/amd64/server
-
-# Source .bashrc file in console: source .bashrc
-# Run R CMD javareconf -e in console to ensure that all is correct.
 
 
 #IN R, installing libraries
 # install.packages("rJava", dep=TRUE)
-install.packages("RNetLogo", dep=TRUE)
+#install.packages("RNetLogo", dep=TRUE)
 
 #loading library
 library("RNetLogo")
@@ -67,13 +42,14 @@ library("RNetLogo")
 #######################################
 #netlogo executable, it requires the location of the "app" folder inside of the netlogo install folder
 #IMPORTANT: If your model uses NetLogo extensions, copy the files of the extension inside the "app" folder of the NetLogo install folder.
-netlogo.path <- "/home/blas/Dropbox/AMAZON_CLOUD/netlogo/app"
+netlogo.path <- "/home/rstudio/PalaeoFireModeling/netlogo/app"
 
 #model path. IMPORTANT: requires an absolute path
-model.path <- "/home/blas/Dropbox/RESEARCH/COLLABORATIONS/compartido_modelos_fuego/5_model/code/model.nlogo" 
+model.path <- "/home/rstudio/PalaeoFireModeling/model.nlogo" 
 
 #main working folder
-working.folder <- "/home/blas/Dropbox/RESEARCH/COLLABORATIONS/compartido_modelos_fuego/5_model/code"
+working.folder <- "/home/rstudio/PalaeoFireModeling"
+setwd(working.folder)
 
 #OUTPUT FOLDER
 output.folder <- paste(working.folder, "/output", sep="")
@@ -91,18 +67,18 @@ NLLoadModel(model.path)
 
 #DECOMPRESSING INPUT DATA
 #####################################
-unzip("data.zip")
+unzip(zipfile="/home/rstudio/PalaeoFireModeling/data.zip")
 
 
 #EXECUTION PARAMETERS
 #######################################
 #iterations to initialize the population model
-burn.in.iterations=10
+burn.in.iterations=1000
 #number of times each simulation is repeated
-repetitions=5
+repetitions=10
 #number of years to be run in the simulation
 run.years=nrow(read.table(paste(working.folder, "/data/fire", sep="")))
-run.years=50
+# run.years=50
 #range of fire parameter values
 fire.probability.per.year.values=seq(0.2, 1, by=0.2)
 fire.ignitions.amplification.factor.values=seq(10, 50, by=10)
@@ -113,95 +89,95 @@ fire.ignitions.amplification.factor.values=seq(10, 50, by=10)
 #use this function whenever you need to reset the trait values in the GUI, ideally to be run before each execution
 set.traits <- function(){
   NLCommand("set P.sylvestris? TRUE", 
-  "set Ps-max-age 800", 
-  "set Ps-maturity-age 30",
-  "set Ps-pollen-productivity 1", 
-  "set Ps-growth-rate 0.1", 
-  "set Ps-max-biomass 200", 
-  "set Ps-heliophilia 0.2", 
-  "set Ps-seedling-tolerance 10", 
-  "set Ps-adult-tolerance 50", 
-  "set Ps-seedling-mortality 0.05", 
-  "set Ps-adult-mortality 0.001", 
-  "set Ps-resprout-after-fire 0", 
-  "set Ps-min-slope 4.2", 
-  "set Ps-max-slope 31.4", 
-  "set Ps-min-temperature -4.6", 
-  "set Ps-max-temperature 6.8", 
-  "set Ps-intercept 2.02131", 
-  "set Ps-coefficient 0.36198", 
-  "set P.uncinata? TRUE", 
-  "set Pu-max-age 800", 
-  "set Pu-maturity-age 30", 
-  "set Pu-pollen-productivity 1", 
-  "set Pu-growth-rate 0.1", 
-  "set Pu-max-biomass 200", 
-  "set Pu-heliophilia 0.2", 
-  "set Pu-seedling-tolerance 10", 
-  "set Pu-adult-tolerance 50", 
-  "set Pu-seedling-mortality 0.05", 
-  "set Pu-adult-mortality 0.001", 
-  "set Pu-resprout-after-fire 0", 
-  "set Pu-min-slope 7.1", 
-  "set Pu-max-slope 36.5", 
-  "set Pu-min-temperature -1.1", 
-  "set Pu-max-temperature 7.4", 
-  "set Pu-intercept 0.2695", 
-  "set Pu-coefficient 0.6179", 
-  "set B.pendula? TRUE", 
-  "set Bp-max-age 100", 
-  "set Bp-maturity-age 15", 
-  "set Bp-pollen-productivity 1", 
-  "set Bp-growth-rate 0.3", 
-  "set Bp-max-biomass 150", 
-  "set Bp-heliophilia 0.4", 
-  "set Bp-seedling-tolerance 5", 
-  "set Bp-adult-tolerance 10", 
-  "set Bp-seedling-mortality 0.1", 
-  "set Bp-adult-mortality 0.008", 
-  "set Bp-resprout-after-fire 1", 
-  "set Bp-min-slope 6.5", 
-  "set Bp-max-slope 37.9", 
-  "set Bp-min-temperature -2.8", 
-  "set Bp-max-temperature 7", 
-  "set Bp-intercept 0.71627", 
-  "set Bp-coefficient 0.273", 
-  "set Q.petraea? TRUE", 
-  "set Qp-max-age 500", 
-  "set Qp-maturity-age 30", 
-  "set Qp-pollen-productivity 1", 
-  "set Qp-growth-rate 0.1", 
-  "set Qp-max-biomass 150", 
-  "set Qp-heliophilia 0.1", 
-  "set Qp-seedling-tolerance 10", 
-  "set Qp-adult-tolerance 40", 
-  "set Qp-seedling-mortality 0.1", 
-  "set Qp-adult-mortality 0.002", 
-  "set Qp-resprout-after-fire 1", 
-  "set Qp-min-slope 3.5", 
-  "set Qp-max-slope 33.5", 
-  "set Qp-min-temperature 2.5", 
-  "set Qp-max-temperature 7.5", 
-  "set Qp-intercept -2.20832", 
-  "set Qp-coefficient 0.8189", 
-  "set C.avellana? TRUE", 
-  "set Ca-max-age 100", 
-  "set Ca-maturity-age 10", 
-  "set Ca-pollen-productivity 1", 
-  "set Ca-growth-rate 0.3", 
-  "set Ca-max-biomass 150", 
-  "set Ca-heliophilia 0.4", 
-  "set Ca-seedling-tolerance 5", 
-  "set Ca-adult-tolerance 15", 
-  "set Ca-seedling-mortality 0.2", 
-  "set Ca-adult-mortality 0.006", 
-  "set Ca-resprout-after-fire 1", 
-  "set Ca-min-slope 2.5", 
-  "set Ca-max-slope 34.5", 
-  "set Ca-min-temperature 0.3", 
-  "set Ca-max-temperature 8.2", 
-  "set Ca-intercept 1.51796", 
-  "set Ca-coefficient 0.84631")
+            "set Ps-max-age 800", 
+            "set Ps-maturity-age 30",
+            "set Ps-pollen-productivity 1", 
+            "set Ps-growth-rate 0.1", 
+            "set Ps-max-biomass 200", 
+            "set Ps-heliophilia 0.2", 
+            "set Ps-seedling-tolerance 10", 
+            "set Ps-adult-tolerance 50", 
+            "set Ps-seedling-mortality 0.05", 
+            "set Ps-adult-mortality 0.001", 
+            "set Ps-resprout-after-fire 0", 
+            "set Ps-min-slope 4.2", 
+            "set Ps-max-slope 31.4", 
+            "set Ps-min-temperature -4.6", 
+            "set Ps-max-temperature 6.8", 
+            "set Ps-intercept 2.02131", 
+            "set Ps-coefficient 0.36198", 
+            "set P.uncinata? TRUE", 
+            "set Pu-max-age 800", 
+            "set Pu-maturity-age 30", 
+            "set Pu-pollen-productivity 1", 
+            "set Pu-growth-rate 0.1", 
+            "set Pu-max-biomass 200", 
+            "set Pu-heliophilia 0.2", 
+            "set Pu-seedling-tolerance 10", 
+            "set Pu-adult-tolerance 50", 
+            "set Pu-seedling-mortality 0.05", 
+            "set Pu-adult-mortality 0.001", 
+            "set Pu-resprout-after-fire 0", 
+            "set Pu-min-slope 7.1", 
+            "set Pu-max-slope 36.5", 
+            "set Pu-min-temperature -1.1", 
+            "set Pu-max-temperature 7.4", 
+            "set Pu-intercept 0.2695", 
+            "set Pu-coefficient 0.6179", 
+            "set B.pendula? TRUE", 
+            "set Bp-max-age 100", 
+            "set Bp-maturity-age 15", 
+            "set Bp-pollen-productivity 1", 
+            "set Bp-growth-rate 0.3", 
+            "set Bp-max-biomass 150", 
+            "set Bp-heliophilia 0.4", 
+            "set Bp-seedling-tolerance 5", 
+            "set Bp-adult-tolerance 10", 
+            "set Bp-seedling-mortality 0.1", 
+            "set Bp-adult-mortality 0.008", 
+            "set Bp-resprout-after-fire 1", 
+            "set Bp-min-slope 6.5", 
+            "set Bp-max-slope 37.9", 
+            "set Bp-min-temperature -2.8", 
+            "set Bp-max-temperature 7", 
+            "set Bp-intercept 0.71627", 
+            "set Bp-coefficient 0.273", 
+            "set Q.petraea? TRUE", 
+            "set Qp-max-age 500", 
+            "set Qp-maturity-age 30", 
+            "set Qp-pollen-productivity 1", 
+            "set Qp-growth-rate 0.1", 
+            "set Qp-max-biomass 150", 
+            "set Qp-heliophilia 0.1", 
+            "set Qp-seedling-tolerance 10", 
+            "set Qp-adult-tolerance 40", 
+            "set Qp-seedling-mortality 0.1", 
+            "set Qp-adult-mortality 0.002", 
+            "set Qp-resprout-after-fire 1", 
+            "set Qp-min-slope 3.5", 
+            "set Qp-max-slope 33.5", 
+            "set Qp-min-temperature 2.5", 
+            "set Qp-max-temperature 7.5", 
+            "set Qp-intercept -2.20832", 
+            "set Qp-coefficient 0.8189", 
+            "set C.avellana? TRUE", 
+            "set Ca-max-age 100", 
+            "set Ca-maturity-age 10", 
+            "set Ca-pollen-productivity 1", 
+            "set Ca-growth-rate 0.3", 
+            "set Ca-max-biomass 150", 
+            "set Ca-heliophilia 0.4", 
+            "set Ca-seedling-tolerance 5", 
+            "set Ca-adult-tolerance 15", 
+            "set Ca-seedling-mortality 0.2", 
+            "set Ca-adult-mortality 0.006", 
+            "set Ca-resprout-after-fire 1", 
+            "set Ca-min-slope 2.5", 
+            "set Ca-max-slope 34.5", 
+            "set Ca-min-temperature 0.3", 
+            "set Ca-max-temperature 8.2", 
+            "set Ca-intercept 1.51796", 
+            "set Ca-coefficient 0.84631")
 }
 
 #example (will throw an error if the model isn't loaded)
@@ -226,11 +202,11 @@ nofire.experiment=list()
 
 #SIMULATIONS
 for (current.repetition in 1:repetitions){
-    
+  
   #create folder to store results
   repetition.folder=paste("output/nofire/repetition_", current.repetition, sep="")
   dir.create(repetition.folder, recursive=TRUE)
- 
+  
   #PARAMETER CONFIGURATION
   #output folder
   NLCommand("set Output-path", paste("\"", repetition.folder, "\"", sep=""))
@@ -258,7 +234,7 @@ for (current.repetition in 1:repetitions){
   
   #store resulting tables in list
   nofire.experiment[[current.repetition]] <- read.table(paste(repetition.folder, "/output_table.csv", sep=""), header=TRUE, sep=";", dec=".")
-
+  
 }
 
 
