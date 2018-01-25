@@ -11,8 +11,8 @@ extensions [gis]
 ;;################
 globals
 [
-  ;output path, had to remove it from the GUI to be able to use it as a variable in RNetLogo
-  output-folder
+  ;in GU
+  ;Simulation-name
 
   ;landscape globals
   landscape-area ;extension and resolution of the landscape coming from a GIS map
@@ -191,9 +191,6 @@ to simulation-setup
   ;reset ticks to 0
   reset-ticks
 
-  ;set output path
-  set output-folder "output"
-
   ;setting random seed
   if Randomness-settings = "Free seed, non-deterministic results" [random-seed random 2147483647]
   if Randomness-settings = "Fixed seed, deterministic results" [random-seed 10000]
@@ -339,13 +336,6 @@ to simulation-run
 
   ;POST FIRE RESPONSE
   biotic-post-fire-response
-
-  ;END SIMULATION
-  if age-current = age-last
-  [
-    export-interface word output-folder "/model_fire_final.png"
-    stop
-    ]
 
   ;couting ticks
   tick
@@ -1342,7 +1332,7 @@ to output-snapshots
 
     if Snapshots? = "every year"
     [
-      export-view (word output-folder "/snapshot-" ticks age-current ".png")
+      export-view (word "output/" Simulation-name "-" ticks age-current ".png")
       ]
 
     if  Snapshots? = "every 10 years"
@@ -1351,7 +1341,7 @@ to output-snapshots
       let word-ticks (word ticks)
       if (ticks >= 10) and (last word-ticks = "0") and (last but-last word-ticks != "0") or (ticks = 100)
       [
-        export-view (word output-folder "/snapshot-" ticks age-current ".png")
+        export-view (word "output/" Simulation-name "-" ticks age-current ".png")
         ]
       ]
 
@@ -1363,15 +1353,15 @@ end
 
 to output-create-file
 
-  ;checks if the file exists
-  if (file-exists? word output-folder "/output_table.csv")
+    ;checks if the file exists
+  if (file-exists? (word "output/" Simulation-name ".csv"))
   [carefully
-    [file-delete word output-folder  "/output_table.csv"]
+    [file-delete (word "output/" Simulation-name ".csv")]
     [print error-message]
   ]
 
   ;creates the file
-  file-open word output-folder "/output_table.csv"
+  file-open (word "output/" Simulation-name ".csv")
   file-type "age;"
   file-type "temperature_minimum_average;"
   file-type "pollen_Psylvestris;"
@@ -1395,7 +1385,7 @@ end
 to output-write-file
 
   ;filling field by field
-  file-open word output-folder "/output_table.csv"
+  file-open (word "output/" Simulation-name ".csv")
   file-type (word age-current ";")
   file-type (word output-temperature-minimum-average ";")
   file-type (word output-pollen-vegetation-species-A ";")
@@ -1423,16 +1413,15 @@ end
 to output-parameters-file
 
   ;checks if the file exists
-  if (file-exists? word output-folder "/input_parameters.txt")
+  if (file-exists? (word "output/" Simulation-name "_params.txt"))
   [carefully
-    [file-delete word output-folder  "/input_parameters.txt"]
+    [file-delete (word "output/" Simulation-name "_params.txt")]
     [print error-message]
   ]
 
   ;creates the file
-  file-open word output-folder "/input_parameters.txt"
-file-open word output-folder "/input_parameters.txt"
-file-type (word "output-folder: " output-folder "\n")
+file-open (word "output/" Simulation-name "_params.txt")
+file-type (word "Simulation-name: " Simulation-name "\n")
 file-type (word "Snapshots?: " Snapshots? "\n")
 file-type (word "Draw-topography?: " Draw-topography? "\n")
 file-type (word "RSAP-radius: " RSAP-radius "\n")
@@ -1637,7 +1626,7 @@ RSAP-radius
 RSAP-radius
 5
 50
-48.0
+0.0
 1
 1
 NIL
@@ -1737,7 +1726,7 @@ INPUTBOX
 552
 107
 Ps-max-age
-800.0
+0.0
 1
 0
 Number
@@ -1748,7 +1737,7 @@ INPUTBOX
 552
 167
 Ps-maturity-age
-30.0
+0.0
 1
 0
 Number
@@ -1759,7 +1748,7 @@ INPUTBOX
 552
 227
 Ps-pollen-productivity
-1.0
+0.0
 1
 0
 Number
@@ -1770,7 +1759,7 @@ INPUTBOX
 552
 286
 Ps-growth-rate
-0.1
+0.0
 1
 0
 Number
@@ -1781,7 +1770,7 @@ INPUTBOX
 552
 347
 Ps-max-biomass
-200.0
+0.0
 1
 0
 Number
@@ -1792,7 +1781,7 @@ INPUTBOX
 554
 407
 Ps-heliophilia
-0.2
+0.0
 1
 0
 Number
@@ -1803,7 +1792,7 @@ INPUTBOX
 552
 467
 Ps-seedling-tolerance
-10.0
+0.0
 1
 0
 Number
@@ -1814,7 +1803,7 @@ INPUTBOX
 552
 527
 Ps-adult-tolerance
-50.0
+0.0
 1
 0
 Number
@@ -1825,7 +1814,7 @@ INPUTBOX
 552
 586
 Ps-seedling-mortality
-0.05
+0.0
 1
 0
 Number
@@ -1836,7 +1825,7 @@ INPUTBOX
 552
 643
 Ps-adult-mortality
-0.001
+0.0
 1
 0
 Number
@@ -1858,7 +1847,7 @@ INPUTBOX
 711
 106
 Pu-max-age
-800.0
+0.0
 1
 0
 Number
@@ -1869,7 +1858,7 @@ INPUTBOX
 712
 167
 Pu-maturity-age
-30.0
+0.0
 1
 0
 Number
@@ -1880,7 +1869,7 @@ INPUTBOX
 712
 227
 Pu-pollen-productivity
-1.0
+0.0
 1
 0
 Number
@@ -1891,7 +1880,7 @@ INPUTBOX
 712
 286
 Pu-growth-rate
-0.1
+0.0
 1
 0
 Number
@@ -1902,7 +1891,7 @@ INPUTBOX
 712
 347
 Pu-max-biomass
-200.0
+0.0
 1
 0
 Number
@@ -1913,7 +1902,7 @@ INPUTBOX
 714
 407
 Pu-heliophilia
-0.2
+0.0
 1
 0
 Number
@@ -1924,7 +1913,7 @@ INPUTBOX
 712
 467
 Pu-seedling-tolerance
-10.0
+0.0
 1
 0
 Number
@@ -1935,7 +1924,7 @@ INPUTBOX
 712
 527
 Pu-adult-tolerance
-50.0
+0.0
 1
 0
 Number
@@ -1946,7 +1935,7 @@ INPUTBOX
 712
 586
 Pu-seedling-mortality
-0.05
+0.0
 1
 0
 Number
@@ -1957,7 +1946,7 @@ INPUTBOX
 712
 643
 Pu-adult-mortality
-0.001
+0.0
 1
 0
 Number
@@ -1979,7 +1968,7 @@ INPUTBOX
 872
 106
 Bp-max-age
-100.0
+0.0
 1
 0
 Number
@@ -1990,7 +1979,7 @@ INPUTBOX
 873
 167
 Bp-maturity-age
-15.0
+0.0
 1
 0
 Number
@@ -2001,7 +1990,7 @@ INPUTBOX
 873
 227
 Bp-pollen-productivity
-1.0
+0.0
 1
 0
 Number
@@ -2012,7 +2001,7 @@ INPUTBOX
 873
 286
 Bp-growth-rate
-0.3
+0.0
 1
 0
 Number
@@ -2023,7 +2012,7 @@ INPUTBOX
 873
 347
 Bp-max-biomass
-150.0
+0.0
 1
 0
 Number
@@ -2034,7 +2023,7 @@ INPUTBOX
 875
 407
 Bp-heliophilia
-0.4
+0.0
 1
 0
 Number
@@ -2045,7 +2034,7 @@ INPUTBOX
 873
 467
 Bp-seedling-tolerance
-5.0
+0.0
 1
 0
 Number
@@ -2056,7 +2045,7 @@ INPUTBOX
 873
 527
 Bp-adult-tolerance
-10.0
+0.0
 1
 0
 Number
@@ -2067,7 +2056,7 @@ INPUTBOX
 873
 586
 Bp-seedling-mortality
-0.1
+0.0
 1
 0
 Number
@@ -2078,7 +2067,7 @@ INPUTBOX
 873
 643
 Bp-adult-mortality
-0.008
+0.0
 1
 0
 Number
@@ -2089,7 +2078,7 @@ INPUTBOX
 874
 703
 Bp-resprout-after-fire
-1.0
+0.0
 1
 0
 Number
@@ -2100,7 +2089,7 @@ INPUTBOX
 1196
 106
 Ca-max-age
-100.0
+0.0
 1
 0
 Number
@@ -2111,7 +2100,7 @@ INPUTBOX
 1197
 167
 Ca-maturity-age
-10.0
+0.0
 1
 0
 Number
@@ -2122,7 +2111,7 @@ INPUTBOX
 1197
 227
 Ca-pollen-productivity
-1.0
+0.0
 1
 0
 Number
@@ -2133,7 +2122,7 @@ INPUTBOX
 1197
 286
 Ca-growth-rate
-0.3
+0.0
 1
 0
 Number
@@ -2144,7 +2133,7 @@ INPUTBOX
 1197
 347
 Ca-max-biomass
-150.0
+0.0
 1
 0
 Number
@@ -2155,7 +2144,7 @@ INPUTBOX
 1196
 407
 Ca-heliophilia
-0.4
+0.0
 1
 0
 Number
@@ -2166,7 +2155,7 @@ INPUTBOX
 1197
 467
 Ca-seedling-tolerance
-5.0
+0.0
 1
 0
 Number
@@ -2177,7 +2166,7 @@ INPUTBOX
 1197
 527
 Ca-adult-tolerance
-15.0
+0.0
 1
 0
 Number
@@ -2188,7 +2177,7 @@ INPUTBOX
 1197
 586
 Ca-seedling-mortality
-0.2
+0.0
 1
 0
 Number
@@ -2199,7 +2188,7 @@ INPUTBOX
 1197
 643
 Ca-adult-mortality
-0.006
+0.0
 1
 0
 Number
@@ -2210,7 +2199,7 @@ INPUTBOX
 1198
 703
 Ca-resprout-after-fire
-1.0
+0.0
 1
 0
 Number
@@ -2221,7 +2210,7 @@ INPUTBOX
 1034
 106
 Qp-max-age
-500.0
+0.0
 1
 0
 Number
@@ -2232,7 +2221,7 @@ INPUTBOX
 1035
 168
 Qp-maturity-age
-30.0
+0.0
 1
 0
 Number
@@ -2243,7 +2232,7 @@ INPUTBOX
 1035
 228
 Qp-pollen-productivity
-1.0
+0.0
 1
 0
 Number
@@ -2254,7 +2243,7 @@ INPUTBOX
 1035
 287
 Qp-growth-rate
-0.1
+0.0
 1
 0
 Number
@@ -2265,7 +2254,7 @@ INPUTBOX
 1035
 348
 Qp-max-biomass
-150.0
+0.0
 1
 0
 Number
@@ -2276,7 +2265,7 @@ INPUTBOX
 1037
 408
 Qp-heliophilia
-0.1
+0.0
 1
 0
 Number
@@ -2287,7 +2276,7 @@ INPUTBOX
 1035
 468
 Qp-seedling-tolerance
-10.0
+0.0
 1
 0
 Number
@@ -2298,7 +2287,7 @@ INPUTBOX
 1035
 528
 Qp-adult-tolerance
-40.0
+0.0
 1
 0
 Number
@@ -2309,7 +2298,7 @@ INPUTBOX
 1035
 587
 Qp-seedling-mortality
-0.1
+0.0
 1
 0
 Number
@@ -2320,7 +2309,7 @@ INPUTBOX
 1035
 644
 Qp-adult-mortality
-0.002
+0.0
 1
 0
 Number
@@ -2331,7 +2320,7 @@ INPUTBOX
 1036
 703
 Qp-resprout-after-fire
-1.0
+0.0
 1
 0
 Number
@@ -2342,7 +2331,7 @@ INPUTBOX
 385
 484
 Max-biomass-per-patch
-500.0
+0.0
 1
 0
 Number
@@ -2436,7 +2425,7 @@ INPUTBOX
 388
 738
 Burn-in-iterations
-10.0
+0.0
 1
 0
 Number
@@ -2579,7 +2568,7 @@ INPUTBOX
 553
 765
 Ps-min-slope
-4.2
+0.0
 1
 0
 Number
@@ -2590,7 +2579,7 @@ INPUTBOX
 553
 823
 Ps-max-slope
-31.4
+0.0
 1
 0
 Number
@@ -2601,7 +2590,7 @@ INPUTBOX
 553
 881
 Ps-min-temperature
--4.6
+0.0
 1
 0
 Number
@@ -2612,7 +2601,7 @@ INPUTBOX
 553
 941
 Ps-max-temperature
-6.8
+0.0
 1
 0
 Number
@@ -2623,7 +2612,7 @@ INPUTBOX
 553
 1001
 Ps-intercept
-2.02131
+0.0
 1
 0
 Number
@@ -2634,7 +2623,7 @@ INPUTBOX
 553
 1061
 Ps-coefficient
-0.36198
+0.0
 1
 0
 Number
@@ -2645,7 +2634,7 @@ INPUTBOX
 713
 763
 Pu-min-slope
-7.1
+0.0
 1
 0
 Number
@@ -2656,7 +2645,7 @@ INPUTBOX
 713
 822
 Pu-max-slope
-36.5
+0.0
 1
 0
 Number
@@ -2667,7 +2656,7 @@ INPUTBOX
 713
 880
 Pu-min-temperature
--1.1
+0.0
 1
 0
 Number
@@ -2678,7 +2667,7 @@ INPUTBOX
 714
 940
 Pu-max-temperature
-7.4
+0.0
 1
 0
 Number
@@ -2689,7 +2678,7 @@ INPUTBOX
 714
 1000
 Pu-intercept
-0.2695
+0.0
 1
 0
 Number
@@ -2700,7 +2689,7 @@ INPUTBOX
 715
 1060
 Pu-coefficient
-0.6179
+0.0
 1
 0
 Number
@@ -2711,7 +2700,7 @@ INPUTBOX
 876
 763
 Bp-min-slope
-6.5
+0.0
 1
 0
 Number
@@ -2722,7 +2711,7 @@ INPUTBOX
 876
 822
 Bp-max-slope
-37.9
+0.0
 1
 0
 Number
@@ -2733,7 +2722,7 @@ INPUTBOX
 875
 881
 Bp-min-temperature
--2.8
+0.0
 1
 0
 Number
@@ -2744,7 +2733,7 @@ INPUTBOX
 875
 940
 Bp-max-temperature
-7.0
+0.0
 1
 0
 Number
@@ -2755,7 +2744,7 @@ INPUTBOX
 876
 1000
 Bp-intercept
-0.71627
+0.0
 1
 0
 Number
@@ -2766,7 +2755,7 @@ INPUTBOX
 876
 1060
 Bp-coefficient
-0.273
+0.0
 1
 0
 Number
@@ -2777,7 +2766,7 @@ INPUTBOX
 1038
 763
 Qp-min-slope
-3.5
+0.0
 1
 0
 Number
@@ -2788,7 +2777,7 @@ INPUTBOX
 1038
 823
 Qp-max-slope
-33.5
+0.0
 1
 0
 Number
@@ -2799,7 +2788,7 @@ INPUTBOX
 1037
 882
 Qp-min-temperature
-2.5
+0.0
 1
 0
 Number
@@ -2810,7 +2799,7 @@ INPUTBOX
 1037
 941
 Qp-max-temperature
-7.5
+0.0
 1
 0
 Number
@@ -2821,7 +2810,7 @@ INPUTBOX
 1037
 1000
 Qp-intercept
--2.20832
+0.0
 1
 0
 Number
@@ -2832,7 +2821,7 @@ INPUTBOX
 1038
 1060
 Qp-coefficient
-0.8189
+0.0
 1
 0
 Number
@@ -2843,7 +2832,7 @@ INPUTBOX
 1199
 763
 Ca-min-slope
-2.5
+0.0
 1
 0
 Number
@@ -2854,7 +2843,7 @@ INPUTBOX
 1199
 823
 Ca-max-slope
-34.5
+0.0
 1
 0
 Number
@@ -2865,7 +2854,7 @@ INPUTBOX
 1200
 883
 Ca-min-temperature
-0.3
+0.0
 1
 0
 Number
@@ -2876,7 +2865,7 @@ INPUTBOX
 1199
 943
 Ca-max-temperature
-8.2
+0.0
 1
 0
 Number
@@ -2887,7 +2876,7 @@ INPUTBOX
 1199
 1000
 Ca-intercept
-1.51796
+0.0
 1
 0
 Number
@@ -2898,7 +2887,7 @@ INPUTBOX
 1199
 1060
 Ca-coefficient
-0.84631
+0.0
 1
 0
 Number
@@ -2943,26 +2932,16 @@ OUTPUT
 0.0
 1
 
-MONITOR
+INPUTBOX
 26
-229
-386
-278
-NIL
-output-folder
+152
+385
+212
+Simulation-name
+sim
+1
 0
-1
-12
-
-TEXTBOX
-27
-163
-372
-223
-The output folder is hardcoded in the simulation-setup procedure. It should show up here after pushing the Setup button. Path relative to the path of the model.nlogo file
-12
-0.0
-1
+String
 
 @#$#@#$#@
 ## WHAT IS IT?
