@@ -1,4 +1,4 @@
-#AUTHOR: BLAS M. BENITO
+##AUTHOR: BLAS M. BENITO
 #EMAIL: blasbenito (at) gmail.com
 
 #INSTALLING NETLOGO 6.0.2
@@ -32,11 +32,15 @@ unzip("netlogo.zip")
 
 #IN R, installing libraries
 # install.packages("rJava", dep=TRUE)
+<<<<<<< HEAD
+# install.packages("RNetLogo", dep=TRUE)
+=======
 #install.packages("RNetLogo", dep=TRUE)
+>>>>>>> b28647f1b2da3fd9b5f1bb748b0cab38f3fd5628
 
 #loading library
 library("RNetLogo")
-
+library("parallel")
 
 #RELEVANT PATHS (MODIFY THEM AS YOU NEED)
 #######################################
@@ -54,6 +58,8 @@ setwd(working.folder)
 #OUTPUT FOLDER
 output.folder <- paste(working.folder, "/output", sep="")
 dir.create(output.folder)
+
+setwd("~/PalaeoFireModeling")
 
 
 #LOADING MODEL
@@ -74,8 +80,15 @@ unzip(zipfile="/home/rstudio/PalaeoFireModeling/data.zip")
 #######################################
 #iterations to initialize the population model
 burn.in.iterations=1000
+<<<<<<< HEAD
+burn.in.iterations=1000
 #number of times each simulation is repeated
 repetitions=10
+repetitions=5
+=======
+#number of times each simulation is repeated
+repetitions=10
+>>>>>>> b28647f1b2da3fd9b5f1bb748b0cab38f3fd5628
 #number of years to be run in the simulation
 run.years=nrow(read.table(paste(working.folder, "/data/fire", sep="")))
 # run.years=50
@@ -194,8 +207,6 @@ set.traits()
 ##############################################################################
 #CONTROL SIMULATION: NO FIRE
 ##############################################################################
-#WORKING FOLDER (where the NetLogo model lives)
-setwd(working.folder)
 
 #LIST TO SAVE RESULTS
 nofire.experiment=list()
@@ -203,6 +214,11 @@ nofire.experiment=list()
 #SIMULATIONS
 for (current.repetition in 1:repetitions){
   
+<<<<<<< HEAD
+  print(current.repetition)
+    
+=======
+>>>>>>> b28647f1b2da3fd9b5f1bb748b0cab38f3fd5628
   #create folder to store results
   repetition.folder=paste("output/nofire/repetition_", current.repetition, sep="")
   dir.create(repetition.folder, recursive=TRUE)
@@ -266,6 +282,7 @@ for (fire.probability.per.year in fire.probability.per.year.values){
       
       #gathering parameters
       fire.id=fire.id+1
+      print(fire.id)
       fire.ids=c(fire.ids, fire.id)
       fire.probability=c(fire.probability, fire.probability.per.year)
       fire.ignitions=c(fire.ignitions, fire.ignitions.amplification.factor)
@@ -322,3 +339,90 @@ write.table(experiments.table, file = "output/fire_experiments.csv", col.names =
 
 #close the model
 NLQuit()
+
+
+#PARALLELISED VERSION
+################################################
+################################################
+
+#FUNCTIONS
+
+#initialization function (to be used by each core)
+initialize.model <- function(dummy, netlogo.path, model.path) {
+  library(RNetLogo)
+  NLStart(netlogo.path, gui=FALSE, nl.jarname="netlogo-6.0.2.jar")
+  NLLoadModel(model.path)
+}
+
+#nofire simulation function
+nofire.simulation <- function(current.repetition){
+  
+  #PARAMETERS
+  burn.in.iterations=10
+  run.years=50
+  
+  #create folder to store results
+  repetition.folder=paste("output/nofire/repetition_", current.repetition, sep="")
+  dir.create(repetition.folder, recursive=TRUE)
+  
+  #PARAMETER CONFIGURATION
+  #output folder
+  NLCommand("set Output-path", paste("\"", repetition.folder, "\"", sep=""))
+  
+  #traits
+  set.traits()
+  
+  #general parameters for all simulations
+  NLCommand("set Snapshots?  \"no snapshots\"", 
+            "set Draw-topography? FALSE", 
+            "set RSAP-radius 50", 
+            "set Randomness-settings  \"Free seed, non-deterministic results\"", 
+            "set Max-biomass-per-patch 500", 
+            "set Mortality? TRUE", 
+            "set Burn-in-iterations ", burn.in.iterations)
+  
+  #deactivating fire
+  NLCommand("set Fire? FALSE")
+  
+  #running setup procedure
+  NLCommand("simulation-setup")
+  
+  #run simulation
+  NLDoCommand(run.years, "simulation-run")
+  
+  #output
+  output.table <- read.table(paste(repetition.folder, "/output_table.csv", sep=""), header=TRUE, sep=";", dec=".")
+  return(output.table)
+  
+}
+
+#stopping function
+quit.netlogo <- function(x){
+  NLQuit()
+}
+
+
+
+#NO FIRE SIMULATION
+##############################################
+##############################################
+#setting up the cluster
+cores <- detectCores()
+cluster <- makeCluster(cores)
+#exporting relevant functions to the cluster
+clusterExport(cl=cluster, c('set.traits', 'netlogo.path', 'model.path'))
+
+#loading netlogo on each processor
+invisible(parLapply(cluster, 1:cores, initialize.model, netlogo.path=netlogo.path, model.path=model.path))
+
+#number of repetitions
+current.repetition <- 1:8
+
+#running simulation
+result.nofire.simulation <- parSapply(cluster, current.repetition, nofire.simulation)
+
+#quit Netlogo in each processor
+invisible(parLapply(cluster, 1:cores, quit.netlogo))
+
+# stop cluster
+stopCluster(cluster)
