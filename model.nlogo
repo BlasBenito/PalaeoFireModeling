@@ -11,8 +11,8 @@ extensions [gis]
 ;;################
 globals
 [
-  ;output path, had to remove it from the GUI to be able to change it form R. NLCommand was failing to do so...
-  Ouput-path
+  ;output path, had to remove it from the GUI to be able to use it as a variable in RNetLogo
+  output-folder
 
   ;landscape globals
   landscape-area ;extension and resolution of the landscape coming from a GIS map
@@ -191,6 +191,9 @@ to simulation-setup
   ;reset ticks to 0
   reset-ticks
 
+  ;set output path
+  set output-folder "output"
+
   ;setting random seed
   if Randomness-settings = "Free seed, non-deterministic results" [random-seed random 2147483647]
   if Randomness-settings = "Fixed seed, deterministic results" [random-seed 10000]
@@ -340,7 +343,7 @@ to simulation-run
   ;END SIMULATION
   if age-current = age-last
   [
-    export-interface word Output-path "/model_fire_final.png"
+    export-interface word output-folder "/model_fire_final.png"
     stop
     ]
 
@@ -1339,7 +1342,7 @@ to output-snapshots
 
     if Snapshots? = "every year"
     [
-      export-view (word Output-path "/snapshot-" ticks age-current ".png")
+      export-view (word output-folder "/snapshot-" ticks age-current ".png")
       ]
 
     if  Snapshots? = "every 10 years"
@@ -1348,7 +1351,7 @@ to output-snapshots
       let word-ticks (word ticks)
       if (ticks >= 10) and (last word-ticks = "0") and (last but-last word-ticks != "0") or (ticks = 100)
       [
-        export-view (word Output-path "/snapshot-" ticks age-current ".png")
+        export-view (word output-folder "/snapshot-" ticks age-current ".png")
         ]
       ]
 
@@ -1361,14 +1364,14 @@ end
 to output-create-file
 
   ;checks if the file exists
-  if (file-exists? word Output-path "/output_table.csv")
+  if (file-exists? word output-folder "/output_table.csv")
   [carefully
-    [file-delete word Output-path  "/output_table.csv"]
+    [file-delete word output-folder  "/output_table.csv"]
     [print error-message]
   ]
 
   ;creates the file
-  file-open word Output-path "/output_table.csv"
+  file-open word output-folder "/output_table.csv"
   file-type "age;"
   file-type "temperature_minimum_average;"
   file-type "pollen_Psylvestris;"
@@ -1392,7 +1395,7 @@ end
 to output-write-file
 
   ;filling field by field
-  file-open word Output-path "/output_table.csv"
+  file-open word output-folder "/output_table.csv"
   file-type (word age-current ";")
   file-type (word output-temperature-minimum-average ";")
   file-type (word output-pollen-vegetation-species-A ";")
@@ -1420,16 +1423,16 @@ end
 to output-parameters-file
 
   ;checks if the file exists
-  if (file-exists? word Output-path "/input_parameters.txt")
+  if (file-exists? word output-folder "/input_parameters.txt")
   [carefully
-    [file-delete word Output-path  "/input_parameters.txt"]
+    [file-delete word output-folder  "/input_parameters.txt"]
     [print error-message]
   ]
 
   ;creates the file
-  file-open word Output-path "/input_parameters.txt"
-file-open word Output-path "/input_parameters.txt"
-file-type (word "Output-path: " Output-path "\n")
+  file-open word output-folder "/input_parameters.txt"
+file-open word output-folder "/input_parameters.txt"
+file-type (word "output-folder: " output-folder "\n")
 file-type (word "Snapshots?: " Snapshots? "\n")
 file-type (word "Draw-topography?: " Draw-topography? "\n")
 file-type (word "RSAP-radius: " RSAP-radius "\n")
@@ -1634,7 +1637,7 @@ RSAP-radius
 RSAP-radius
 5
 50
-50.0
+48.0
 1
 1
 NIL
@@ -2417,10 +2420,10 @@ PENS
 "Corylus avellana" 1.0 0 -2064490 true "" "plot output-pollen-vegetation-species-D"
 
 SWITCH
-24
-216
-386
-249
+25
+110
+387
+143
 Draw-topography?
 Draw-topography?
 1
@@ -2485,10 +2488,10 @@ PENS
 "Quercus petraea" 1.0 0 -3844592 true "" "plot output-pollen-vegetation-species-E"
 
 CHOOSER
-25
-158
-385
-203
+26
+60
+386
+105
 Snapshots?
 Snapshots?
 "no snapshots" "every 10 years" "every year"
@@ -2940,16 +2943,26 @@ OUTPUT
 0.0
 1
 
-INPUTBOX
-25
-58
-385
-148
-Output-path
-output/repetition_1
-1
+MONITOR
+26
+229
+386
+278
+NIL
+output-folder
 0
-String
+1
+12
+
+TEXTBOX
+27
+163
+372
+223
+The output folder is hardcoded in the simulation-setup procedure. It should show up here after pushing the Setup button. Path relative to the path of the model.nlogo file
+12
+0.0
+1
 
 @#$#@#$#@
 ## WHAT IS IT?
