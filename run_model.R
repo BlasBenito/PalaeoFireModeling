@@ -4,10 +4,10 @@
 #INSTALLING NETLOGO 6.0.2
 ########################################
 #DOWNLOAD NETLOGO FROM MY DROPBOX (it is ready to use RNetLogo on it)
-download.file(url="https://www.dropbox.com/s/vmddzpc955tul3n/netlogo.zip?raw=1", destfile="netlogo.zip")
+# download.file(url="https://www.dropbox.com/s/vmddzpc955tul3n/netlogo.zip?raw=1", destfile="netlogo.zip")
 
 #DECOMPRESS FILE AND RENAME FOLDER (FOR SIMPLER PATHS)
-unzip("netlogo.zip")
+# unzip("netlogo.zip")
 
 
 #INSTALLING AND LOADING LIBRARIES
@@ -390,7 +390,7 @@ fire.simulation <- function(current.repetition){
   
   #PARAMETER CONFIGURATION
   #simulation name
-  simulation.name=paste("nofire_", current.repetition, sep="")
+  simulation.name=paste("fire_", current.repetition, sep="")
   NLCommand("set Simulation-name", paste("\"", simulation.name, "\"", sep=""))
   
   #traits
@@ -404,6 +404,11 @@ fire.simulation <- function(current.repetition){
             "set Max-biomass-per-patch 500", 
             "set Mortality? TRUE", 
             "set Burn-in-iterations ", burn.in.iterations)
+  
+  #activating fire and setting up parameters
+  NLCommand("set Fire? TRUE", 
+            "set Fire-probability-per-year", fire.probability.per.year, 
+            "set Fire-ignitions-amplification-factor", fire.ignitions.amplification.factor)
   
   #deactivating fire
   NLCommand("set Fire? TRUE")
@@ -457,3 +462,61 @@ invisible(parLapply(cluster, 1:cores, quit.netlogo))
 
 # stop cluster
 stopCluster(cluster)
+
+#saving result
+save(result.nofire.simulation, file="/home/rstudio/PalaeoFireModeling/nofire_experiment.RData")
+
+
+#FIRE SIMULATION
+##############################################
+##############################################
+#setting up the cluster
+cores <- detectCores()
+cluster <- makeCluster(cores)
+#exporting relevant functions to the cluster
+clusterExport(cl=cluster, c('set.traits', 'netlogo.path', 'model.path'))
+
+#loading netlogo on each processor
+invisible(parLapply(cluster, 1:cores, initialize.model, netlogo.path=netlogo.path, model.path=model.path))
+
+#number of repetitions
+current.repetition <- 1:10
+
+#list to store results
+result.fire.simulation=list()
+
+#FIRE PROBABILITY PER YEAR
+for (fire.probability.per.year in fire.probability.per.year.values){
+  
+  #FIRE IGNITIONS AMPLIFICATION FACTOR
+  for (fire.ignitions.amplification.factor in fire.ignitions.amplification.factor.values){
+    
+    #exporting params to the cluster
+    clusterExport(cl=cluster, c('fire.probability.per.year', 'fire.ignitions.amplification.factor'))
+
+    #running simulation (divided in two blocks of 5)
+    temp1 <- parLapply(cluster, 1:5, fire.simulation)
+    temp2 <- parLapply(cluster, 1:5, fire.simulation)
+    
+    temp <- c(temp1, temp2)
+    
+    #names for the results
+    names(temp) <- paste(as.character(current.repetition), rep(paste(fire.probability.per.year, "-", fire.ignitions.amplification.factor), 10))
+    
+    
+    #merging with the results list
+    result.fire.simulation <- c(result.fire.simulation, temp)
+    
+  }
+  
+}
+    
+
+#quit Netlogo in each processor
+invisible(parLapply(cluster, 1:cores, quit.netlogo))
+
+# stop cluster
+stopCluster(cluster)
+
+#saving result
+save(result.fire.simulation, file="/home/rstudio/PalaeoFireModeling/fire_experiment.RData")
