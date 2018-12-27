@@ -1,7 +1,5 @@
 # PalaeoFireModeling
-Netlogo code to simulate the effect of fire on forest dynamics (5 species) over millenial time scales.
-
-# This text is a work in progress
+Netlogo code to simulate the effect of fire on forest dynamics (5 species) over millenial time scales. This text is a work in progress, but the model is fully functional, and a paper describing it will be available soon.
 
 ![Screenshot](snapshot.png)
 
