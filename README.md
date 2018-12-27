@@ -1,10 +1,11 @@
 # PalaeoFireModeling
 Netlogo code to simulate the effect of fire on forest dynamics (5 species) over millenial time scales.
-A short demo video can be found here: https://vimeo.com/274750111
+
+# This text is a work in progress
 
 ## WHAT IS IT?
 
-This is a spatio-temporal simulation of the effect of fire regimes on the population dynamics of five forest species (Pinus sylvestris, Pinus uncinata, Betula pendula, Corylus avellana, and Quercus petraea) during the Lateglacial-Holocene transition (15-7 cal Kyr BP) at El Portalet, an alpine bog located in the central Pyrenees region (1802m asl, Spain), that has served for palaeoenvironmental studies (González-Smapériz et al. 2006; Gil-Romera et al., 2014).
+This is a spatio-temporal simulation of the effect of fire regimes on the population dynamics of five forest species (Pinus sylvestris, Pinus uncinata, Betula pendula, Corylus avellana, and Quercus petraea) during the Lateglacial-Holocene transition (15-7 cal Kyr BP) at El Portalet, an alpine bog located in the central Pyrenees region (1802m asl, Spain), that has served for palaeoenvironmental studies (González-Smapériz et al. 2006; Gil-Romera et al., 2014). A short demo video can be found here: https://vimeo.com/274750111.
 
 
 ## HOW IT WORKS
