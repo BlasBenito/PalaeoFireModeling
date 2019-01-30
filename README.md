@@ -5,10 +5,10 @@ Netlogo code to simulate the effect of fire on forest dynamics (5 species) over 
 
 ## WHAT IS IT?
 
-This is a spatio-temporal simulation of the effect of fire regimes on the population dynamics of five forest species (Pinus sylvestris, Pinus uncinata, Betula pendula, Corylus avellana, and Quercus petraea) during the Lateglacial-Holocene transition (15-7 cal Kyr BP) at El Portalet, an alpine bog located in the central Pyrenees region (1802m asl, Spain), that has served for palaeoenvironmental studies (González-Smapériz et al. 2006; Gil-Romera et al., 2014). A short demo video can be found here: https://vimeo.com/274750111.
+This is a spatio-temporal simulation of the effect of fire regimes on the population dynamics of five forest species (Pinus sylvestris, Pinus uncinata, Betula pendula, Corylus avellana, and Quercus petraea) during the Lateglacial-Holocene transition (15-7 cal Kyr BP) at El Portalet, a subalpine bog located in the central Pyrenees region (1802m asl, Spain), that has served for palaeoenvironmental studies (González-Smapériz et al. 2006; Gil-Romera et al., 2014). A short demo video can be found here: https://vimeo.com/274750111.
 
 
-## HOW IT WORKS
+## HOW DOES IT WORK
 
 ### Abiotic component
 
@@ -18,7 +18,7 @@ The abiotic layer of the model is represented by three main environmental factor
 
 + **Temperature** (average of montly minimum temperatures) time series for the study area computed from palaeoclimatic data at annual resolution provided by the [TraCe simulation](http://www.cgd.ucar.edu/ccr/TraCE/), a transient model for the global climate evolution of the last 21K years with an annual resolution. The single temperature value of every year is converted into a temperature map (200 x 200 m resolution) using a lapse rate map based on the elevation map. Temperature, along with slope, is used to compute habitat suitability by using a logistic equation. Habitat suitability affects plant growth and survival.
 
-+ **Fire**: The charcoal accumulation rate record (CHAR) from El Portalet palaeoenvironmental sequence (Gil-Romera et al., 2014) is used as input to simulate forest fires. A value of this time series is read each year, and a random number in the range [0, 1] is generated. If the random number is lower than the *Fire-probability-per-year* (FPY) parameter defined by the user, the value from the charcoal time series is multiplied by the parameter *Number-ignitions-per-fire-event* (NIF) (defined by the user) to compute the number of ignitions for the given year. As many adult treeF as ignitions are selected to start spreading fire. Fire spreads to a neighbor patch if there is an adult tree in there, and a random number in the range [0, 1] is higher than the northness value of the patch.
++ **Fire**: The charcoal accumulation rate record (CHAR) from El Portalet palaeoenvironmental sequence (Gil-Romera et al., 2014) is used as input to simulate forest fires. A value of this time series is read each year, and a random number in the range [0, 1] is generated. If the random number is lower than the *Fire-probability-per-year* (FPY) parameter defined by the user, the value from the charcoal time series is multiplied by the parameter *Number-ignitions-per-fire-event* (NIF) (defined by the user) to compute the number of ignitions for the given year. As many adult tree as ignitions are selected to start spreading fire. Fire spreads to a neighbor patch if there is an adult tree in there, and a random number in the range [0, 1] is higher than the northness value of the patch.
 
 ### Biotic component
 
@@ -53,7 +53,7 @@ During the model setup seeds of every species are created on every patch. From t
 
 +  Competition and growth:
 
-   +  If the patch total biomass of the individuals in the patch equals *Max-biomass-per-patch*, the individual loses an amount of biomass between 0 and the 20% of its current biomass. This number is selected at random.
+   +  If the patch total biomass of the individuals in the patch equals *Max-biomass-per-patch*, the individual loses an amount of biomass between 0 and the 20% of its current biomass. This number is randomly selected.
 
    + If *Max-biomass-per-patch* has not been reached yet:
 
