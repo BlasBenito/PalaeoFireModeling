@@ -1,5 +1,8 @@
 # PalaeoFireModeling
-Netlogo code to simulate the effect of fire on forest dynamics (5 species) over millenial time scales. This text is a work in progress, but the model is fully functional, and a paper describing it will be available soon.
+
+This model is described in the paper in prep. titled *Forest - fire interactions in the Central Pyrenees: a data-model comparison for the Lateglacial-Holocene transition*, and authored by Graciela Gil-Romera, Blas M. Benito, Juli G. Pausas, Penélope González-Sampériz, J. Julio. Camarero, Jens-Christian Svenning, and Blas Valero-Garcés.
+
+This agent-based model coded in Netlogo simulates the effect of fire on forest dynamics (5 species) over millenial time scales. This text is a work in progress, but the model is fully functional, and a paper describing it will be available soon.
 
 ![Screenshot](snapshot.png)
 
