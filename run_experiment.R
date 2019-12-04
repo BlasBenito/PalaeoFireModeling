@@ -29,7 +29,6 @@
 #reboot system
 
 
-
 #IN R, installing libraries
 # install.packages("rJava", dep=TRUE)
 # install.packages("RNetLogo", dep=TRUE)
@@ -39,6 +38,7 @@
 library("RNetLogo")
 library("parallel")
 
+
 #RELEVANT PATHS (MODIFY THEM AS YOU NEED)
 #######################################
 #netlogo executable, it requires the location of the "app" folder inside of the netlogo install folder
@@ -46,7 +46,7 @@ library("parallel")
 netlogo.path <- "/home/rstudio/PalaeoFireModeling/netlogo/app"
 
 #model path. IMPORTANT: requires an absolute path
-model.path <- "/home/rstudio/PalaeoFireModeling/model.nlogo" 
+model.path <- "/home/rstudio/PalaeoFireModeling/PalaeoFireModel_R.nlogo" 
 
 #main working folder
 working.folder <- "/home/rstudio/PalaeoFireModeling"
@@ -70,7 +70,7 @@ NLLoadModel(model.path)
 
 #DECOMPRESSING INPUT DATA
 #####################################
-unzip(zipfile="/home/rstudio/PalaeoFireModeling/data.zip")
+unzip(zipfile="/home/rstudio/PalaeoFireModeling/data.zip") #not required, data is decompressed in the github repo
 
 
 #EXECUTION PARAMETERS
